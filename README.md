@@ -4,7 +4,7 @@ React Native (Expo Router) frontend for the Brasse Bouillon backend. MVP scope: 
 
 ## Requirements
 
-- Node.js + npm
+- Node.js 20 (see `.nvmrc`) + npm
 - Expo CLI (via `npx expo`)
 - Backend running locally (`brasse-bouillon-backend`)
 
@@ -107,3 +107,16 @@ Batches:
 - UX/perf may be below native for heavy screens
 
 Recommendation for now: keep the Expo app as the source of truth, and enable web as a secondary target for quick testing.
+
+## CI (GitHub Actions)
+
+The frontend repository now includes a minimal CI workflow (`.github/workflows/ci.yml`) that runs on pushes to `main` and on pull requests.
+
+It executes:
+
+- `npm ci`
+- `npm run lint`
+- `npm run typecheck`
+- `npm run format:check`
+
+If CI fails, run the same commands locally and fix issues before pushing again.

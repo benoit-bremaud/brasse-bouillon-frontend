@@ -2,6 +2,9 @@
   "name": "brasse-bouillon-frontend",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=20 <21"
+  },
   "scripts": {
     "start": "expo start",
     "start:lan": "expo start --lan",
