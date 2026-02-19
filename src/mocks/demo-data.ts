@@ -7,6 +7,7 @@ import { Recipe, RecipeStep } from "@/features/recipes/domain/recipe.types";
 
 import { User } from "@/features/auth/domain/auth.types";
 import { Ingredient } from "@/features/ingredients/domain/ingredient.types";
+import { EauProfile } from "@/features/tools/domain/eau.types";
 
 export type Equipment = {
   id: string;
@@ -528,5 +529,60 @@ export const demoBatches: Batch[] = [
       batchId: "b-demo-2",
       status: "completed",
     })),
+  },
+];
+
+type DemoWaterProfile = {
+  lookup: {
+    codePostal: string;
+    commune: string;
+  };
+  profile: EauProfile;
+};
+
+export const demoWaterProfiles: DemoWaterProfile[] = [
+  {
+    lookup: {
+      codePostal: "57970",
+      commune: "Yutz",
+    },
+    profile: {
+      provider: "hubeau",
+      codeInsee: "57770",
+      annee: 2025,
+      nomReseau: "YUTZ CENTRE",
+      nbPrelevements: 18,
+      conformite: "C",
+      minerauxMgL: {
+        ca: 78.4,
+        mg: 6.2,
+        cl: 21.7,
+        so4: 34.1,
+        hco3: 246,
+      },
+      dureteFrancais: 22.1,
+    },
+  },
+  {
+    lookup: {
+      codePostal: "67000",
+      commune: "Strasbourg",
+    },
+    profile: {
+      provider: "hubeau",
+      codeInsee: "67482",
+      annee: 2025,
+      nomReseau: "STRASBOURG NORD",
+      nbPrelevements: 14,
+      conformite: "C",
+      minerauxMgL: {
+        ca: 62.1,
+        mg: 4.4,
+        cl: 18.2,
+        so4: 27.5,
+        hco3: 188,
+      },
+      dureteFrancais: 17.3,
+    },
   },
 ];

@@ -1,4 +1,10 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react-native";
 
 import React from "react";
 import { EauCalculatorScreen } from "../EauCalculatorScreen";
@@ -6,16 +12,55 @@ import { EauCalculatorScreen } from "../EauCalculatorScreen";
 // Mock expo-haptics
 jest.mock("expo-haptics", () => ({
   impactAsync: jest.fn(),
+  notificationAsync: jest.fn(),
   ImpactFeedbackStyle: { Light: "light" },
+  NotificationFeedbackType: { Success: "success", Error: "error" },
 }));
+
+const mockGetWaterProfileByLocation = jest.fn();
+
+jest.mock("@/features/tools/application/eau.use-cases", () => ({
+  getWaterProfileByLocation: (...args: unknown[]) =>
+    mockGetWaterProfileByLocation(...args),
+}));
+
+function renderWithQueryClient(component: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: Infinity },
+      mutations: { retry: false, gcTime: Infinity },
+    },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>{component}</QueryClientProvider>,
+  );
+}
 
 describe("EauCalculatorScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetWaterProfileByLocation.mockReset();
+    mockGetWaterProfileByLocation.mockResolvedValue({
+      provider: "hubeau",
+      codeInsee: "57770",
+      annee: 2025,
+      nomReseau: "YUTZ CENTRE",
+      nbPrelevements: 18,
+      conformite: "C",
+      minerauxMgL: {
+        ca: 78.4,
+        mg: 6.2,
+        cl: 21.7,
+        so4: 34.1,
+        hco3: 246,
+      },
+      dureteFrancais: 22.1,
+    });
   });
 
   it("renders the screen with initial content", () => {
-    render(<EauCalculatorScreen />);
+    renderWithQueryClient(<EauCalculatorScreen />);
 
     expect(screen.getByText("💧 Calculs Eau de brassage")).toBeTruthy();
     expect(
@@ -29,7 +74,7 @@ describe("EauCalculatorScreen", () => {
   // ── PROFIL TAB ──────────────────────────────────────────────────────────────
 
   it("shows the Profil tab by default with ion inputs", () => {
-    render(<EauCalculatorScreen />);
+    renderWithQueryClient(<EauCalculatorScreen />);
 
     expect(screen.getByText("Profil ionique (ppm)")).toBeTruthy();
     expect(
@@ -44,7 +89,7 @@ describe("EauCalculatorScreen", () => {
   });
 
   it("shows initial ion values", () => {
-    render(<EauCalculatorScreen />);
+    renderWithQueryClient(<EauCalculatorScreen />);
 
     // Ca and Cl both start at 75 — expect two inputs with that value
     const seventyFiveInputs = screen.getAllByDisplayValue("75");
@@ -56,7 +101,7 @@ describe("EauCalculatorScreen", () => {
   });
 
   it("shows RA and SO4/Cl ratio result cards", () => {
-    render(<EauCalculatorScreen />);
+    renderWithQueryClient(<EauCalculatorScreen />);
 
     expect(screen.getByText("Alkalinité résiduelle (RA)")).toBeTruthy();
     expect(screen.getByText("Rapport SO₄ / Cl")).toBeTruthy();
@@ -64,7 +109,7 @@ describe("EauCalculatorScreen", () => {
   });
 
   it("displays a formatted RA value (ppm)", () => {
-    render(<EauCalculatorScreen />);
+    renderWithQueryClient(<EauCalculatorScreen />);
 
     // With defaults Ca=75, Mg=10, HCO3=50 → RA = 50 - (75/3.5 + 10/7) ≈ 27.0
     const raValue = screen.getByText(/^\d+\.\d$/);
@@ -72,7 +117,7 @@ describe("EauCalculatorScreen", () => {
   });
 
   it("updates RA when HCO3 input changes", () => {
-    render(<EauCalculatorScreen />);
+    renderWithQueryClient(<EauCalculatorScreen />);
 
     const hco3Input = screen.getByDisplayValue("50");
     fireEvent.changeText(hco3Input, "150");
@@ -82,7 +127,7 @@ describe("EauCalculatorScreen", () => {
   });
 
   it("shows ratio as '—' when Cl is zero", () => {
-    render(<EauCalculatorScreen />);
+    renderWithQueryClient(<EauCalculatorScreen />);
 
     // Set Cl to 0
     // cl input has initial value "75" — get all "75" inputs and change the second one
@@ -96,7 +141,7 @@ describe("EauCalculatorScreen", () => {
   // ── STYLE TAB ───────────────────────────────────────────────────────────────
 
   it("switches to Style tab and shows preset list", () => {
-    render(<EauCalculatorScreen />);
+    renderWithQueryClient(<EauCalculatorScreen />);
 
     fireEvent.press(screen.getByText("Style"));
 
@@ -109,7 +154,7 @@ describe("EauCalculatorScreen", () => {
   });
 
   it("shows ion comparison with profile values in Style tab", () => {
-    render(<EauCalculatorScreen />);
+    renderWithQueryClient(<EauCalculatorScreen />);
 
     fireEvent.press(screen.getByText("Style"));
 
@@ -124,7 +169,7 @@ describe("EauCalculatorScreen", () => {
   });
 
   it("changes style preset on press", () => {
-    render(<EauCalculatorScreen />);
+    renderWithQueryClient(<EauCalculatorScreen />);
 
     fireEvent.press(screen.getByText("Style"));
     fireEvent.press(screen.getByText("IPA"));
@@ -136,7 +181,7 @@ describe("EauCalculatorScreen", () => {
   });
 
   it("shows ✅ or ⚠️ indicators in comparison table", () => {
-    render(<EauCalculatorScreen />);
+    renderWithQueryClient(<EauCalculatorScreen />);
 
     fireEvent.press(screen.getByText("Style"));
 
@@ -149,7 +194,7 @@ describe("EauCalculatorScreen", () => {
   // ── SELS TAB ────────────────────────────────────────────────────────────────
 
   it("switches to Sels tab and shows salt reference cards", () => {
-    render(<EauCalculatorScreen />);
+    renderWithQueryClient(<EauCalculatorScreen />);
 
     fireEvent.press(screen.getByText("Sels"));
 
@@ -162,7 +207,7 @@ describe("EauCalculatorScreen", () => {
   });
 
   it("shows all 6 salt references", () => {
-    render(<EauCalculatorScreen />);
+    renderWithQueryClient(<EauCalculatorScreen />);
 
     fireEvent.press(screen.getByText("Sels"));
 
@@ -175,7 +220,7 @@ describe("EauCalculatorScreen", () => {
   });
 
   it("displays salt formulas", () => {
-    render(<EauCalculatorScreen />);
+    renderWithQueryClient(<EauCalculatorScreen />);
 
     fireEvent.press(screen.getByText("Sels"));
 
@@ -188,7 +233,7 @@ describe("EauCalculatorScreen", () => {
   });
 
   it("displays ion contributions for salts", () => {
-    render(<EauCalculatorScreen />);
+    renderWithQueryClient(<EauCalculatorScreen />);
 
     fireEvent.press(screen.getByText("Sels"));
 
@@ -200,7 +245,7 @@ describe("EauCalculatorScreen", () => {
   });
 
   it("displays salt notes", () => {
-    render(<EauCalculatorScreen />);
+    renderWithQueryClient(<EauCalculatorScreen />);
 
     fireEvent.press(screen.getByText("Sels"));
 
@@ -215,7 +260,7 @@ describe("EauCalculatorScreen", () => {
   // ── TAB SWITCHING ───────────────────────────────────────────────────────────
 
   it("allows switching between all three tabs", () => {
-    render(<EauCalculatorScreen />);
+    renderWithQueryClient(<EauCalculatorScreen />);
 
     // Profil → Style
     fireEvent.press(screen.getByText("Style"));
@@ -228,5 +273,63 @@ describe("EauCalculatorScreen", () => {
     // Sels → Profil
     fireEvent.press(screen.getByText("Profil"));
     expect(screen.getByText("Profil ionique (ppm)")).toBeTruthy();
+  });
+
+  it("searches water profile and displays preview", async () => {
+    renderWithQueryClient(<EauCalculatorScreen />);
+
+    fireEvent.changeText(screen.getByLabelText("Code postal"), "57970");
+    fireEvent.changeText(screen.getByLabelText("Commune"), "Yutz");
+    fireEvent.press(screen.getByText("Rechercher mon eau"));
+
+    expect(await screen.findByText("Profil trouvé")).toBeTruthy();
+    await waitFor(() => {
+      expect(mockGetWaterProfileByLocation).toHaveBeenCalled();
+      expect(mockGetWaterProfileByLocation.mock.calls[0]?.[0]).toEqual({
+        codePostal: "57970",
+        commune: "Yutz",
+      });
+    });
+    expect(screen.getByText("YUTZ CENTRE")).toBeTruthy();
+    expect(screen.getByText("18")).toBeTruthy();
+  });
+
+  it("displays lookup error", async () => {
+    mockGetWaterProfileByLocation.mockRejectedValueOnce(
+      new Error("Aucune donnée eau trouvée pour cette commune"),
+    );
+
+    renderWithQueryClient(<EauCalculatorScreen />);
+
+    fireEvent.changeText(screen.getByLabelText("Code postal"), "99999");
+    fireEvent.changeText(screen.getByLabelText("Commune"), "Inconnue");
+    fireEvent.press(screen.getByText("Rechercher mon eau"));
+
+    expect(
+      await screen.findByText("Aucune donnée eau trouvée pour cette commune"),
+    ).toBeTruthy();
+  });
+
+  it("applies profile values and clears Na for manual input", async () => {
+    renderWithQueryClient(<EauCalculatorScreen />);
+
+    fireEvent.changeText(screen.getByLabelText("Code postal"), "57970");
+    fireEvent.changeText(screen.getByLabelText("Commune"), "Yutz");
+    fireEvent.press(screen.getByText("Rechercher mon eau"));
+
+    const applyButton = await screen.findByText("Appliquer ce profil");
+    fireEvent.press(applyButton);
+
+    expect(screen.getByDisplayValue("78.4")).toBeTruthy();
+    expect(screen.getByDisplayValue("6.2")).toBeTruthy();
+    expect(screen.getByDisplayValue("34.1")).toBeTruthy();
+    expect(screen.getByDisplayValue("21.7")).toBeTruthy();
+    expect(screen.getByDisplayValue("246")).toBeTruthy();
+
+    expect(
+      screen.getByText(
+        "Le sodium (Na⁺) n'est pas fourni par la source. Merci de le saisir manuellement.",
+      ),
+    ).toBeTruthy();
   });
 });

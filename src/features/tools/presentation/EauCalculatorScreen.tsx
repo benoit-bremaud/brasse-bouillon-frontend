@@ -1,6 +1,12 @@
 import * as Haptics from "expo-haptics";
 
 import {
+  calculateResidualAlkalinity,
+  calculateSulfateChlorideRatio,
+} from "@/core/brewing-calculations";
+import { colors, radius, shadows, spacing, typography } from "@/core/theme";
+import React, { useCallback, useState } from "react";
+import {
   Pressable,
   ScrollView,
   StyleSheet,
@@ -8,16 +14,15 @@ import {
   TextInput,
   View,
 } from "react-native";
-import React, { useCallback, useState } from "react";
-import {
-  calculateResidualAlkalinity,
-  calculateSulfateChlorideRatio,
-} from "@/core/brewing-calculations";
-import { colors, radius, shadows, spacing, typography } from "@/core/theme";
 
+import { getErrorMessage } from "@/core/http/http-error";
 import { Card } from "@/core/ui/Card";
 import { ListHeader } from "@/core/ui/ListHeader";
+import { PrimaryButton } from "@/core/ui/PrimaryButton";
 import { Screen } from "@/core/ui/Screen";
+import { useMutation } from "@tanstack/react-query";
+import { getWaterProfileByLocation } from "../application/eau.use-cases";
+import { EauProfile } from "../domain/eau.types";
 
 type TabName = "profil" | "style" | "sels";
 
@@ -238,8 +243,31 @@ function parseIon(text: string): number {
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
 }
 
+function formatNullableNumber(value: number | null): string {
+  if (value === null || Number.isNaN(value)) {
+    return "—";
+  }
+
+  return value.toFixed(1);
+}
+
+function sanitizeNumericInput(text: string): string {
+  return text.replace(/[^0-9]/g, "");
+}
+
+function sanitizeCommuneInput(text: string): string {
+  return text.replace(/\s+/g, " ").trimStart();
+}
+
 export function EauCalculatorScreen() {
   const [activeTab, setActiveTab] = useState<TabName>("profil");
+
+  // Water lookup
+  const [postalCodeText, setPostalCodeText] = useState("");
+  const [communeText, setCommuneText] = useState("");
+  const [lookupError, setLookupError] = useState<string | null>(null);
+  const [lookupResult, setLookupResult] = useState<EauProfile | null>(null);
+  const [naNeedsManualInput, setNaNeedsManualInput] = useState(false);
 
   // Ion values (in ppm)
   const [caText, setCaText] = useState("75");
@@ -261,6 +289,74 @@ export function EauCalculatorScreen() {
     setStyleIndex(index);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, []);
+
+  const waterLookupMutation = useMutation({
+    mutationFn: getWaterProfileByLocation,
+    onMutate: () => {
+      setLookupError(null);
+      setLookupResult(null);
+    },
+    onSuccess: (profile) => {
+      setLookupResult(profile);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    },
+    onError: (error) => {
+      setLookupError(
+        getErrorMessage(error, "Impossible de récupérer le profil eau."),
+      );
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    },
+  });
+
+  const canSearchWater =
+    postalCodeText.trim().length === 5 && communeText.trim().length > 1;
+
+  const handleSearchWater = useCallback(() => {
+    const payload = {
+      codePostal: postalCodeText.trim(),
+      commune: communeText.trim(),
+    };
+
+    waterLookupMutation.mutate(payload);
+  }, [communeText, postalCodeText, waterLookupMutation]);
+
+  const handleApplyWaterProfile = useCallback(() => {
+    if (!lookupResult) {
+      return;
+    }
+
+    setCaText(
+      lookupResult.minerauxMgL.ca === null
+        ? ""
+        : String(lookupResult.minerauxMgL.ca),
+    );
+    setMgText(
+      lookupResult.minerauxMgL.mg === null
+        ? ""
+        : String(lookupResult.minerauxMgL.mg),
+    );
+    setSo4Text(
+      lookupResult.minerauxMgL.so4 === null
+        ? ""
+        : String(lookupResult.minerauxMgL.so4),
+    );
+    setClText(
+      lookupResult.minerauxMgL.cl === null
+        ? ""
+        : String(lookupResult.minerauxMgL.cl),
+    );
+    setHco3Text(
+      lookupResult.minerauxMgL.hco3 === null
+        ? ""
+        : String(lookupResult.minerauxMgL.hco3),
+    );
+
+    setNaText("");
+    setNaNeedsManualInput(true);
+    setActiveTab("profil");
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, [lookupResult]);
 
   // Live calculations
   const ca = parseIon(caText);
@@ -365,10 +461,139 @@ export function EauCalculatorScreen() {
         {activeTab === "profil" && (
           <>
             <Card style={styles.card}>
+              <Text style={styles.cardTitle}>Trouver mon eau</Text>
+              <Text style={styles.cardSubtitle}>
+                Recherchez les caractéristiques de l'eau via code postal et
+                commune
+              </Text>
+
+              <View style={styles.lookupRow}>
+                <View style={styles.lookupFieldPostal}>
+                  <Text style={styles.inputLabel}>Code postal</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={postalCodeText}
+                    onChangeText={(text) =>
+                      setPostalCodeText(sanitizeNumericInput(text).slice(0, 5))
+                    }
+                    keyboardType="number-pad"
+                    placeholder="57970"
+                    maxLength={5}
+                    accessibilityLabel="Code postal"
+                  />
+                </View>
+
+                <View style={styles.lookupFieldCommune}>
+                  <Text style={styles.inputLabel}>Commune</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={communeText}
+                    onChangeText={(text) =>
+                      setCommuneText(sanitizeCommuneInput(text))
+                    }
+                    placeholder="Yutz"
+                    accessibilityLabel="Commune"
+                  />
+                </View>
+              </View>
+
+              <PrimaryButton
+                label={
+                  waterLookupMutation.isPending
+                    ? "Recherche en cours..."
+                    : "Rechercher mon eau"
+                }
+                onPress={handleSearchWater}
+                disabled={!canSearchWater || waterLookupMutation.isPending}
+              />
+
+              {lookupError ? (
+                <Text style={styles.lookupErrorText}>{lookupError}</Text>
+              ) : null}
+            </Card>
+
+            {lookupResult ? (
+              <Card style={styles.card}>
+                <Text style={styles.cardTitle}>Profil trouvé</Text>
+
+                <View style={styles.lookupMetaRow}>
+                  <Text style={styles.lookupMetaLabel}>Réseau</Text>
+                  <Text style={styles.lookupMetaValue}>
+                    {lookupResult.nomReseau || "—"}
+                  </Text>
+                </View>
+                <View style={styles.lookupMetaRow}>
+                  <Text style={styles.lookupMetaLabel}>Conformité</Text>
+                  <Text style={styles.lookupMetaValue}>
+                    {lookupResult.conformite}
+                  </Text>
+                </View>
+                <View style={styles.lookupMetaRow}>
+                  <Text style={styles.lookupMetaLabel}>Prélèvements</Text>
+                  <Text style={styles.lookupMetaValue}>
+                    {lookupResult.nbPrelevements}
+                  </Text>
+                </View>
+                <View style={styles.lookupMetaRow}>
+                  <Text style={styles.lookupMetaLabel}>Dureté (°f)</Text>
+                  <Text style={styles.lookupMetaValue}>
+                    {formatNullableNumber(lookupResult.dureteFrancais)}
+                  </Text>
+                </View>
+
+                <View style={styles.lookupMineralsGrid}>
+                  <View style={styles.lookupMineralItem}>
+                    <Text style={styles.lookupMineralLabel}>Ca</Text>
+                    <Text style={styles.lookupMineralValue}>
+                      {formatNullableNumber(lookupResult.minerauxMgL.ca)}
+                    </Text>
+                  </View>
+                  <View style={styles.lookupMineralItem}>
+                    <Text style={styles.lookupMineralLabel}>Mg</Text>
+                    <Text style={styles.lookupMineralValue}>
+                      {formatNullableNumber(lookupResult.minerauxMgL.mg)}
+                    </Text>
+                  </View>
+                  <View style={styles.lookupMineralItem}>
+                    <Text style={styles.lookupMineralLabel}>SO₄</Text>
+                    <Text style={styles.lookupMineralValue}>
+                      {formatNullableNumber(lookupResult.minerauxMgL.so4)}
+                    </Text>
+                  </View>
+                  <View style={styles.lookupMineralItem}>
+                    <Text style={styles.lookupMineralLabel}>Cl</Text>
+                    <Text style={styles.lookupMineralValue}>
+                      {formatNullableNumber(lookupResult.minerauxMgL.cl)}
+                    </Text>
+                  </View>
+                  <View style={styles.lookupMineralItem}>
+                    <Text style={styles.lookupMineralLabel}>HCO₃</Text>
+                    <Text style={styles.lookupMineralValue}>
+                      {formatNullableNumber(lookupResult.minerauxMgL.hco3)}
+                    </Text>
+                  </View>
+                </View>
+
+                <PrimaryButton
+                  label="Appliquer ce profil"
+                  onPress={handleApplyWaterProfile}
+                  style={styles.applyButton}
+                />
+              </Card>
+            ) : null}
+
+            <Card style={styles.card}>
               <Text style={styles.cardTitle}>Profil ionique (ppm)</Text>
               <Text style={styles.cardSubtitle}>
                 Saisissez les concentrations de votre eau en mg/L
               </Text>
+
+              {naNeedsManualInput ? (
+                <Text style={styles.naHintText}>
+                  Le sodium (Na⁺) n'est pas fourni par la source. Merci de le
+                  saisir manuellement.
+                </Text>
+              ) : null}
 
               <View style={styles.ionGrid}>
                 <View style={styles.ionField}>
@@ -684,6 +909,94 @@ const styles = StyleSheet.create({
     fontSize: typography.size.label,
     color: colors.neutral.textSecondary,
     marginBottom: spacing.sm,
+  },
+  inputLabel: {
+    fontSize: typography.size.label,
+    fontWeight: typography.weight.medium,
+    color: colors.neutral.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: colors.neutral.border,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    fontSize: typography.size.body,
+    color: colors.neutral.textPrimary,
+    backgroundColor: colors.neutral.white,
+  },
+  lookupRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  lookupFieldPostal: {
+    flex: 2,
+  },
+  lookupFieldCommune: {
+    flex: 3,
+  },
+  lookupErrorText: {
+    marginTop: spacing.xs,
+    color: colors.semantic.error,
+    fontSize: typography.size.caption,
+    fontWeight: typography.weight.medium,
+  },
+  lookupMetaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.xs,
+  },
+  lookupMetaLabel: {
+    fontSize: typography.size.label,
+    color: colors.neutral.textSecondary,
+  },
+  lookupMetaValue: {
+    fontSize: typography.size.label,
+    color: colors.neutral.textPrimary,
+    fontWeight: typography.weight.medium,
+  },
+  lookupMineralsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  lookupMineralItem: {
+    backgroundColor: colors.semantic.info,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    minWidth: 82,
+    borderWidth: 1,
+    borderColor: colors.neutral.border,
+  },
+  lookupMineralLabel: {
+    fontSize: typography.size.caption,
+    color: colors.neutral.textSecondary,
+  },
+  lookupMineralValue: {
+    marginTop: 2,
+    fontSize: typography.size.label,
+    color: colors.neutral.textPrimary,
+    fontWeight: typography.weight.bold,
+  },
+  applyButton: {
+    marginTop: spacing.xs,
+  },
+  naHintText: {
+    marginBottom: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.semantic.warning,
+    backgroundColor: colors.brand.background,
+    color: colors.neutral.textPrimary,
+    fontSize: typography.size.caption,
+    lineHeight: typography.lineHeight.caption,
   },
   // Ion grid (Profil tab)
   ionGrid: {
