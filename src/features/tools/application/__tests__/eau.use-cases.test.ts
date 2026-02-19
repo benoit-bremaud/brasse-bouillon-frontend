@@ -32,6 +32,18 @@ describe("eau use-cases", () => {
     expect(getWaterProfileByLocationApi).not.toHaveBeenCalled();
   });
 
+  it("returns another demo profile for a different department", async () => {
+    const profile = await getWaterProfileByLocation({
+      codePostal: "69001",
+      commune: "Lyon",
+    });
+
+    expect(profile.codeInsee).toBe("69123");
+    expect(profile.nomReseau).toBe("LYON RHONE CENTRE");
+    expect(profile.minerauxMgL.ca).toBe(73.8);
+    expect(getWaterProfileByLocationApi).not.toHaveBeenCalled();
+  });
+
   it("throws when required fields are missing", async () => {
     await expect(
       getWaterProfileByLocation({ codePostal: "", commune: "" }),
