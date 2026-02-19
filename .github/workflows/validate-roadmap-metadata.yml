@@ -1,0 +1,175 @@
+name: Validate Roadmap Metadata
+
+on:
+  pull_request:
+    branches: [develop, main]
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  validate-roadmap-metadata:
+    name: Validate ROADMAP_SYNC block and sync label
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate ROADMAP_SYNC metadata block
+        id: validate
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request?.body ?? "";
+            const blockRegex = /<!-- ROADMAP_SYNC_START -->\r?\n([\s\S]*?)\r?\n<!-- ROADMAP_SYNC_END -->/m;
+            const blockMatch = body.match(blockRegex);
+
+            if (!blockMatch) {
+              core.setFailed("Missing ROADMAP_SYNC block delimited by ROADMAP_SYNC_START/END markers.");
+              return;
+            }
+
+            const content = blockMatch[1];
+            const lines = content
+              .split(/\r?\n/)
+              .map((line) => line.trim())
+              .filter((line) => line.length > 0);
+
+            const expectedKeys = [
+              "user_facing",
+              "phase",
+              "impact_type",
+              "summary_fr",
+              "summary_en",
+              "evidence_links",
+            ];
+
+            if (lines.length !== expectedKeys.length) {
+              core.setFailed(
+                `ROADMAP_SYNC block must contain exactly ${expectedKeys.length} non-empty lines in the required order.`
+              );
+              return;
+            }
+
+            const parsed = {};
+
+            for (let i = 0; i < expectedKeys.length; i += 1) {
+              const expectedKey = expectedKeys[i];
+              const line = lines[i];
+              const expectedPrefix = `${expectedKey}:`;
+
+              if (!line.startsWith(expectedPrefix)) {
+                core.setFailed(`Invalid ROADMAP_SYNC line #${i + 1}. Expected key '${expectedKey}' in strict order.`);
+                return;
+              }
+
+              const value = line.slice(expectedPrefix.length).trim();
+              if (!value) {
+                core.setFailed(`ROADMAP_SYNC field '${expectedKey}' cannot be empty.`);
+                return;
+              }
+
+              parsed[expectedKey] = value;
+            }
+
+            if (!/^(yes|no)$/.test(parsed.user_facing)) {
+              core.setFailed("ROADMAP_SYNC field 'user_facing' must be exactly 'yes' or 'no'.");
+              return;
+            }
+
+            if (!/^(?:[1-9]|10)$/.test(parsed.phase)) {
+              core.setFailed("ROADMAP_SYNC field 'phase' must be an integer between 1 and 10.");
+              return;
+            }
+
+            if (!/^(feature|fix|security)$/.test(parsed.impact_type)) {
+              core.setFailed("ROADMAP_SYNC field 'impact_type' must be exactly 'feature', 'fix', or 'security'.");
+              return;
+            }
+
+            const summaryFr = parsed.summary_fr;
+            const summaryEn = parsed.summary_en;
+            const placeholderRegex = /^<.*>$/;
+
+            if (placeholderRegex.test(summaryFr) || placeholderRegex.test(summaryEn)) {
+              core.setFailed("ROADMAP_SYNC summaries must be real content, not template placeholders.");
+              return;
+            }
+
+            const evidenceLinks = parsed.evidence_links
+              .split(",")
+              .map((value) => value.trim())
+              .filter((value) => value.length > 0);
+
+            if (evidenceLinks.length === 0) {
+              core.setFailed("ROADMAP_SYNC field 'evidence_links' must contain at least one URL.");
+              return;
+            }
+
+            const invalidUrl = evidenceLinks.find((url) => !/^https?:\/\/.+/i.test(url));
+            if (invalidUrl) {
+              core.setFailed(`ROADMAP_SYNC contains an invalid evidence URL: '${invalidUrl}'.`);
+              return;
+            }
+
+            core.setOutput("user_facing", parsed.user_facing);
+            core.notice("ROADMAP_SYNC metadata block is valid.");
+
+      - name: Ensure roadmap:user-facing label exists
+        if: steps.validate.outputs.user_facing == 'yes'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const name = "roadmap:user-facing";
+
+            try {
+              await github.rest.issues.getLabel({ owner, repo, name });
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+
+              await github.rest.issues.createLabel({
+                owner,
+                repo,
+                name,
+                color: "0e8a16",
+                description: "User-facing roadmap impact",
+              });
+            }
+
+      - name: Add roadmap:user-facing label
+        if: steps.validate.outputs.user_facing == 'yes'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              labels: ["roadmap:user-facing"],
+            });
+
+      - name: Remove roadmap:user-facing label when not user-facing
+        if: steps.validate.outputs.user_facing != 'yes'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issue_number = context.payload.pull_request.number;
+
+            try {
+              await github.rest.issues.removeLabel({
+                owner,
+                repo,
+                issue_number,
+                name: "roadmap:user-facing",
+              });
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+            }

@@ -1,0 +1,166 @@
+name: Dispatch Roadmap Update
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch-roadmap-update:
+    name: Dispatch roadmap_user_facing_update to website
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Extract and validate ROADMAP_SYNC metadata
+        id: metadata
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request?.body ?? "";
+            const blockRegex = /<!-- ROADMAP_SYNC_START -->\r?\n([\s\S]*?)\r?\n<!-- ROADMAP_SYNC_END -->/m;
+            const blockMatch = body.match(blockRegex);
+
+            if (!blockMatch) {
+              core.setFailed("Missing ROADMAP_SYNC block delimited by ROADMAP_SYNC_START/END markers.");
+              return;
+            }
+
+            const content = blockMatch[1];
+            const lines = content
+              .split(/\r?\n/)
+              .map((line) => line.trim())
+              .filter((line) => line.length > 0);
+
+            const expectedKeys = [
+              "user_facing",
+              "phase",
+              "impact_type",
+              "summary_fr",
+              "summary_en",
+              "evidence_links",
+            ];
+
+            if (lines.length !== expectedKeys.length) {
+              core.setFailed(
+                `ROADMAP_SYNC block must contain exactly ${expectedKeys.length} non-empty lines in the required order.`
+              );
+              return;
+            }
+
+            const parsed = {};
+
+            for (let i = 0; i < expectedKeys.length; i += 1) {
+              const expectedKey = expectedKeys[i];
+              const line = lines[i];
+              const expectedPrefix = `${expectedKey}:`;
+
+              if (!line.startsWith(expectedPrefix)) {
+                core.setFailed(`Invalid ROADMAP_SYNC line #${i + 1}. Expected key '${expectedKey}' in strict order.`);
+                return;
+              }
+
+              const value = line.slice(expectedPrefix.length).trim();
+              if (!value) {
+                core.setFailed(`ROADMAP_SYNC field '${expectedKey}' cannot be empty.`);
+                return;
+              }
+
+              parsed[expectedKey] = value;
+            }
+
+            if (!/^(yes|no)$/.test(parsed.user_facing)) {
+              core.setFailed("ROADMAP_SYNC field 'user_facing' must be exactly 'yes' or 'no'.");
+              return;
+            }
+
+            if (!/^(?:[1-9]|10)$/.test(parsed.phase)) {
+              core.setFailed("ROADMAP_SYNC field 'phase' must be an integer between 1 and 10.");
+              return;
+            }
+
+            if (!/^(feature|fix|security)$/.test(parsed.impact_type)) {
+              core.setFailed("ROADMAP_SYNC field 'impact_type' must be exactly 'feature', 'fix', or 'security'.");
+              return;
+            }
+
+            const placeholderRegex = /^<.*>$/;
+            if (placeholderRegex.test(parsed.summary_fr) || placeholderRegex.test(parsed.summary_en)) {
+              core.setFailed("ROADMAP_SYNC summaries must be real content, not template placeholders.");
+              return;
+            }
+
+            const evidenceLinks = parsed.evidence_links
+              .split(",")
+              .map((value) => value.trim())
+              .filter((value) => value.length > 0);
+
+            if (evidenceLinks.length === 0) {
+              core.setFailed("ROADMAP_SYNC field 'evidence_links' must contain at least one URL.");
+              return;
+            }
+
+            const invalidUrl = evidenceLinks.find((url) => !/^https?:\/\/.+/i.test(url));
+            if (invalidUrl) {
+              core.setFailed(`ROADMAP_SYNC contains an invalid evidence URL: '${invalidUrl}'.`);
+              return;
+            }
+
+            core.setOutput("user_facing", parsed.user_facing);
+            core.setOutput("phase", parsed.phase);
+            core.setOutput("impact_type", parsed.impact_type);
+            core.setOutput("summary_fr", parsed.summary_fr);
+            core.setOutput("summary_en", parsed.summary_en);
+            core.setOutput("evidence_links", JSON.stringify(evidenceLinks));
+
+      - name: Build website repository_dispatch payload
+        if: steps.metadata.outputs.user_facing == 'yes'
+        id: payload
+        uses: actions/github-script@v7
+        env:
+          EVIDENCE_LINKS_JSON: ${{ steps.metadata.outputs.evidence_links }}
+          PHASE: ${{ steps.metadata.outputs.phase }}
+          IMPACT_TYPE: ${{ steps.metadata.outputs.impact_type }}
+          SUMMARY_FR: ${{ steps.metadata.outputs.summary_fr }}
+          SUMMARY_EN: ${{ steps.metadata.outputs.summary_en }}
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const evidenceLinks = JSON.parse(process.env.EVIDENCE_LINKS_JSON ?? "[]");
+
+            const payload = {
+              source_repo: `${context.repo.owner}/${context.repo.repo}`,
+              pr_number: pr.number,
+              pr_url: pr.html_url,
+              pr_title: pr.title,
+              merged_at: pr.merged_at,
+              phase: process.env.PHASE,
+              impact_type: process.env.IMPACT_TYPE,
+              summary_fr: process.env.SUMMARY_FR,
+              summary_en: process.env.SUMMARY_EN,
+              evidence_links: evidenceLinks,
+            };
+
+            core.setOutput("client_payload", JSON.stringify(payload));
+
+      - name: Dispatch roadmap update to website repository
+        if: steps.metadata.outputs.user_facing == 'yes'
+        env:
+          WEBSITE_DISPATCH_TOKEN: ${{ secrets.WEBSITE_DISPATCH_TOKEN }}
+          CLIENT_PAYLOAD: ${{ steps.payload.outputs.client_payload }}
+        run: |
+          if [ -z "$WEBSITE_DISPATCH_TOKEN" ]; then
+            echo "Missing required secret: WEBSITE_DISPATCH_TOKEN"
+            exit 1
+          fi
+
+          curl --fail --silent --show-error \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${WEBSITE_DISPATCH_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/benoit-bremaud/brasse-bouillon-website/dispatches \
+            -d "$(jq -cn --arg event_type 'roadmap_user_facing_update' --argjson client_payload "$CLIENT_PAYLOAD" '{event_type: $event_type, client_payload: $client_payload}')"
