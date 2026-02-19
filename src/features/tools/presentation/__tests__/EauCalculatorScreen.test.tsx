@@ -1,7 +1,14 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
-import { EauCalculatorScreen } from "../EauCalculatorScreen";
+import { calculateHeuristicWaterAdjustments } from "@/features/tools/application/eau-adjustments.use-cases";
+import { WaterAdjustmentPlanResult } from "@/features/tools/domain/eau.types";
 import React from "react";
+import { EauCalculatorScreen } from "../EauCalculatorScreen";
+
+jest.mock("@/features/tools/application/eau-adjustments.use-cases", () => ({
+  calculateHeuristicWaterAdjustments: jest.fn(),
+  getIonLabel: (ion: string) => `Ion ${ion.toUpperCase()}`,
+}));
 
 // Mock expo-haptics
 jest.mock("expo-haptics", () => ({
@@ -9,9 +16,204 @@ jest.mock("expo-haptics", () => ({
   ImpactFeedbackStyle: { Light: "light" },
 }));
 
+const mockedCalculateHeuristicWaterAdjustments = jest.mocked(
+  calculateHeuristicWaterAdjustments,
+);
+
+function buildFeasiblePlan(): WaterAdjustmentPlanResult {
+  return {
+    mode: "heuristic",
+    title: "Mode standard (heuristique lisible)",
+    feasible: true,
+    summary: "Le profil cible est atteignable avec les ajustements proposés.",
+    recommendations: [
+      {
+        agentId: "gypsum",
+        name: "Gypse",
+        formula: "CaSO₄·2H₂O",
+        group: "sels-mineraux",
+        doseGl: 0.2,
+        doseByVolume: [
+          { liters: 5, grams: 1 },
+          { liters: 10, grams: 2 },
+          { liters: 20, grams: 4 },
+          { liters: 40, grams: 8 },
+        ],
+        expectedImpact: {
+          ca: 4.7,
+          so4: 11.2,
+        },
+        note: "Augmente sécheresse et perception de l'amertume",
+      },
+    ],
+    ionStatuses: [
+      {
+        ion: "ca",
+        current: 75,
+        targetMin: 30,
+        targetMax: 80,
+        targetMid: 55,
+        predicted: 79.7,
+        deltaToMid: 24.7,
+        inRange: true,
+      },
+      {
+        ion: "mg",
+        current: 10,
+        targetMin: 5,
+        targetMax: 20,
+        targetMid: 12.5,
+        predicted: 10,
+        deltaToMid: -2.5,
+        inRange: true,
+      },
+      {
+        ion: "na",
+        current: 20,
+        targetMin: 0,
+        targetMax: 50,
+        targetMid: 25,
+        predicted: 20,
+        deltaToMid: -5,
+        inRange: true,
+      },
+      {
+        ion: "so4",
+        current: 150,
+        targetMin: 20,
+        targetMax: 80,
+        targetMid: 50,
+        predicted: 161.2,
+        deltaToMid: 111.2,
+        inRange: false,
+      },
+      {
+        ion: "cl",
+        current: 75,
+        targetMin: 20,
+        targetMax: 80,
+        targetMid: 50,
+        predicted: 75,
+        deltaToMid: 25,
+        inRange: true,
+      },
+      {
+        ion: "hco3",
+        current: 50,
+        targetMin: 0,
+        targetMax: 50,
+        targetMid: 25,
+        predicted: 50,
+        deltaToMid: 25,
+        inRange: true,
+      },
+    ],
+    warnings: [],
+    alternatives: [],
+  };
+}
+
+function buildNonFeasiblePlan(): WaterAdjustmentPlanResult {
+  return {
+    mode: "heuristic",
+    title: "Mode standard (heuristique lisible)",
+    feasible: false,
+    summary:
+      "Le profil cible reste difficile à atteindre uniquement par ajustements: alternatives recommandées.",
+    recommendations: [],
+    ionStatuses: [
+      {
+        ion: "ca",
+        current: 450,
+        targetMin: 30,
+        targetMax: 80,
+        targetMid: 55,
+        predicted: 350,
+        deltaToMid: 295,
+        inRange: false,
+      },
+      {
+        ion: "mg",
+        current: 95,
+        targetMin: 5,
+        targetMax: 20,
+        targetMid: 12.5,
+        predicted: 85,
+        deltaToMid: 72.5,
+        inRange: false,
+      },
+      {
+        ion: "na",
+        current: 150,
+        targetMin: 0,
+        targetMax: 50,
+        targetMid: 25,
+        predicted: 140,
+        deltaToMid: 115,
+        inRange: false,
+      },
+      {
+        ion: "so4",
+        current: 1300,
+        targetMin: 20,
+        targetMax: 80,
+        targetMid: 50,
+        predicted: 980,
+        deltaToMid: 930,
+        inRange: false,
+      },
+      {
+        ion: "cl",
+        current: 15,
+        targetMin: 20,
+        targetMax: 80,
+        targetMid: 50,
+        predicted: 40,
+        deltaToMid: -10,
+        inRange: true,
+      },
+      {
+        ion: "hco3",
+        current: 420,
+        targetMin: 0,
+        targetMax: 50,
+        targetMid: 25,
+        predicted: 260,
+        deltaToMid: 235,
+        inRange: false,
+      },
+    ],
+    warnings: [
+      "Le sodium projeté dépasse 120 ppm: privilégier une dilution ou une autre base d'eau.",
+    ],
+    alternatives: [
+      {
+        id: "brand-volvic",
+        label: "Marque indicatrice: Volvic",
+        type: "marque",
+        profileApprox: {
+          ca: 12,
+          mg: 8,
+          na: 12,
+          so4: 9,
+          cl: 14,
+          hco3: 74,
+        },
+        description:
+          "Option grand public équilibrée, facile à corriger vers plusieurs styles.",
+        caution:
+          "Minéraux indicatifs, peuvent varier selon captage et millésime.",
+      },
+    ],
+  };
+}
+
 describe("EauCalculatorScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockedCalculateHeuristicWaterAdjustments.mockReturnValue(
+      buildFeasiblePlan(),
+    );
   });
 
   it("renders the screen with initial content", () => {
@@ -154,6 +356,70 @@ describe("EauCalculatorScreen", () => {
     const okIndicators = screen.queryAllByText("✅");
     const warnIndicators = screen.queryAllByText("⚠️");
     expect(okIndicators.length + warnIndicators.length).toBe(6); // one per ion
+  });
+
+  it("shows the style adjustment button and renders generated instructions", () => {
+    render(<EauCalculatorScreen />);
+
+    fireEvent.press(screen.getByText("Style"));
+
+    expect(screen.getByText("Améliorer la qualité pour ce style")).toBeTruthy();
+
+    fireEvent.press(screen.getByText("Générer les instructions d'ajustement"));
+
+    expect(mockedCalculateHeuristicWaterAdjustments).toHaveBeenCalledWith({
+      currentProfile: {
+        ca: 75,
+        mg: 10,
+        na: 20,
+        so4: 150,
+        cl: 75,
+        hco3: 50,
+      },
+      targetRanges: {
+        ca: { min: 30, max: 80 },
+        mg: { min: 5, max: 20 },
+        na: { min: 0, max: 50 },
+        so4: { min: 20, max: 80 },
+        cl: { min: 20, max: 80 },
+        hco3: { min: 0, max: 50 },
+      },
+    });
+
+    expect(screen.getByText("Profil atteignable")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Le profil cible est atteignable avec les ajustements proposés.",
+      ),
+    ).toBeTruthy();
+    expect(screen.getByText("Actions proposées")).toBeTruthy();
+    expect(screen.getByText("Dose: 0.200 g/L")).toBeTruthy();
+    expect(
+      screen.getByText("5L: 1 g · 10L: 2 g · 20L: 4 g · 40L: 8 g"),
+    ).toBeTruthy();
+    expect(screen.getByText("Projection par ion")).toBeTruthy();
+    expect(screen.getByText("Ion CA")).toBeTruthy();
+  });
+
+  it("shows warnings and alternatives when style adjustment is not fully feasible", () => {
+    mockedCalculateHeuristicWaterAdjustments.mockReturnValueOnce(
+      buildNonFeasiblePlan(),
+    );
+
+    render(<EauCalculatorScreen />);
+
+    fireEvent.press(screen.getByText("Style"));
+    fireEvent.press(screen.getByText("Générer les instructions d'ajustement"));
+
+    expect(screen.getByText("Ajustement partiel")).toBeTruthy();
+    expect(screen.getByText("Points de vigilance")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "• Le sodium projeté dépasse 120 ppm: privilégier une dilution ou une autre base d'eau.",
+      ),
+    ).toBeTruthy();
+    expect(screen.getByText("Alternatives recommandées")).toBeTruthy();
+    expect(screen.getByText("Marque indicatrice: Volvic")).toBeTruthy();
   });
 
   // ── SELS TAB ────────────────────────────────────────────────────────────────

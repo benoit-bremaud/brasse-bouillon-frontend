@@ -1,6 +1,21 @@
 import * as Haptics from "expo-haptics";
 
 import {
+  calculateResidualAlkalinity,
+  calculateSulfateChlorideRatio,
+} from "@/core/brewing-calculations";
+import { colors, radius, shadows, spacing, typography } from "@/core/theme";
+import {
+  calculateHeuristicWaterAdjustments,
+  getIonLabel,
+} from "@/features/tools/application/eau-adjustments.use-cases";
+import {
+  EauTargetRanges,
+  WaterAdjustmentPlanResult,
+  WaterAdjustmentRecommendation,
+} from "@/features/tools/domain/eau.types";
+import { useCallback, useState } from "react";
+import {
   Pressable,
   ScrollView,
   StyleSheet,
@@ -8,15 +23,10 @@ import {
   TextInput,
   View,
 } from "react-native";
-import {
-  calculateResidualAlkalinity,
-  calculateSulfateChlorideRatio,
-} from "@/core/brewing-calculations";
-import { colors, radius, shadows, spacing, typography } from "@/core/theme";
-import { useCallback, useState } from "react";
 
 import { Card } from "@/core/ui/Card";
 import { ListHeader } from "@/core/ui/ListHeader";
+import { PrimaryButton } from "@/core/ui/PrimaryButton";
 import { Screen } from "@/core/ui/Screen";
 
 type TabName = "profil" | "style" | "sels";
@@ -238,6 +248,25 @@ function parseIon(text: string): number {
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
 }
 
+function toTargetRanges(preset: StylePreset): EauTargetRanges {
+  return {
+    ca: preset.ca,
+    mg: preset.mg,
+    na: preset.na,
+    so4: preset.so4,
+    cl: preset.cl,
+    hco3: preset.hco3,
+  };
+}
+
+function formatDoseByVolume(
+  recommendation: WaterAdjustmentRecommendation,
+): string {
+  return recommendation.doseByVolume
+    .map((dose) => `${dose.liters}L: ${dose.grams} g`)
+    .join(" · ");
+}
+
 export function EauCalculatorScreen() {
   const [activeTab, setActiveTab] = useState<TabName>("profil");
 
@@ -251,6 +280,8 @@ export function EauCalculatorScreen() {
 
   // Style tab
   const [styleIndex, setStyleIndex] = useState(0);
+  const [adjustmentPlan, setAdjustmentPlan] =
+    useState<WaterAdjustmentPlanResult | null>(null);
 
   const handleTabChange = useCallback((tab: TabName) => {
     setActiveTab(tab);
@@ -259,6 +290,7 @@ export function EauCalculatorScreen() {
 
   const handleStyleChange = useCallback((index: number) => {
     setStyleIndex(index);
+    setAdjustmentPlan(null);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, []);
 
@@ -310,6 +342,16 @@ export function EauCalculatorScreen() {
       range: currentPreset.hco3,
     },
   ];
+
+  const handleGenerateAdjustments = useCallback(() => {
+    const plan = calculateHeuristicWaterAdjustments({
+      currentProfile: { ca, mg, na, so4, cl, hco3 },
+      targetRanges: toTargetRanges(currentPreset),
+    });
+
+    setAdjustmentPlan(plan);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }, [ca, cl, currentPreset, hco3, mg, na, so4]);
 
   return (
     <Screen>
@@ -574,6 +616,141 @@ export function EauCalculatorScreen() {
                 );
               })}
             </Card>
+
+            <Card style={styles.card}>
+              <Text style={styles.cardTitle}>
+                Améliorer la qualité pour ce style
+              </Text>
+              <Text style={styles.cardSubtitle}>
+                Générez des instructions d'ajustement selon votre profil actuel
+              </Text>
+
+              <PrimaryButton
+                label="Générer les instructions d'ajustement"
+                onPress={handleGenerateAdjustments}
+              />
+
+              {adjustmentPlan ? (
+                <View style={styles.adjustmentsContainer}>
+                  <View
+                    style={[
+                      styles.adjustmentStatusBadge,
+                      adjustmentPlan.feasible
+                        ? styles.adjustmentStatusFeasible
+                        : styles.adjustmentStatusNotFeasible,
+                    ]}
+                  >
+                    <Text style={styles.adjustmentStatusText}>
+                      {adjustmentPlan.feasible
+                        ? "Profil atteignable"
+                        : "Ajustement partiel"}
+                    </Text>
+                  </View>
+
+                  <Text style={styles.adjustmentSummary}>
+                    {adjustmentPlan.summary}
+                  </Text>
+
+                  {adjustmentPlan.recommendations.length > 0 ? (
+                    <View style={styles.adjustmentSection}>
+                      <Text style={styles.adjustmentSectionTitle}>
+                        Actions proposées
+                      </Text>
+
+                      {adjustmentPlan.recommendations.map((recommendation) => (
+                        <View
+                          key={recommendation.agentId}
+                          style={styles.adjustmentItem}
+                        >
+                          <Text style={styles.adjustmentItemTitle}>
+                            {recommendation.name} ({recommendation.formula})
+                          </Text>
+                          <Text style={styles.adjustmentItemText}>
+                            Dose: {recommendation.doseGl.toFixed(3)} g/L
+                          </Text>
+                          <Text style={styles.adjustmentItemText}>
+                            {formatDoseByVolume(recommendation)}
+                          </Text>
+                          <Text style={styles.adjustmentItemNote}>
+                            {recommendation.note}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  ) : (
+                    <Text style={styles.adjustmentNeutralText}>
+                      Aucun ajout recommandé pour ce profil.
+                    </Text>
+                  )}
+
+                  {adjustmentPlan.warnings.length > 0 ? (
+                    <View style={styles.adjustmentSection}>
+                      <Text style={styles.adjustmentSectionTitle}>
+                        Points de vigilance
+                      </Text>
+
+                      {adjustmentPlan.warnings.map((warning, index) => (
+                        <Text
+                          key={`${warning}-${index}`}
+                          style={styles.adjustmentWarningText}
+                        >
+                          • {warning}
+                        </Text>
+                      ))}
+                    </View>
+                  ) : null}
+
+                  {adjustmentPlan.alternatives.length > 0 ? (
+                    <View style={styles.adjustmentSection}>
+                      <Text style={styles.adjustmentSectionTitle}>
+                        Alternatives recommandées
+                      </Text>
+
+                      {adjustmentPlan.alternatives.map((alternative) => (
+                        <View
+                          key={alternative.id}
+                          style={styles.adjustmentItem}
+                        >
+                          <Text style={styles.adjustmentItemTitle}>
+                            {alternative.label}
+                          </Text>
+                          <Text style={styles.adjustmentItemText}>
+                            {alternative.description}
+                          </Text>
+                          <Text style={styles.adjustmentItemNote}>
+                            {alternative.caution}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  ) : null}
+
+                  <View style={styles.adjustmentSection}>
+                    <Text style={styles.adjustmentSectionTitle}>
+                      Projection par ion
+                    </Text>
+
+                    {adjustmentPlan.ionStatuses.map((status) => (
+                      <View key={status.ion} style={styles.ionProjectionRow}>
+                        <Text style={styles.ionProjectionLabel}>
+                          {getIonLabel(status.ion)}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.ionProjectionValue,
+                            status.inRange
+                              ? styles.ionProjectionValueOk
+                              : styles.ionProjectionValueOut,
+                          ]}
+                        >
+                          {status.current} → {status.predicted} ppm
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ) : null}
+            </Card>
           </>
         )}
 
@@ -755,6 +932,93 @@ const styles = StyleSheet.create({
     color: colors.neutral.muted,
     fontStyle: "italic",
     marginTop: spacing.xs,
+  },
+  adjustmentsContainer: {
+    marginTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  adjustmentStatusBadge: {
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xxs,
+    alignSelf: "flex-start",
+  },
+  adjustmentStatusFeasible: {
+    backgroundColor: colors.semantic.success,
+  },
+  adjustmentStatusNotFeasible: {
+    backgroundColor: colors.semantic.warning,
+  },
+  adjustmentStatusText: {
+    color: colors.neutral.white,
+    fontWeight: typography.weight.bold,
+    fontSize: typography.size.caption,
+  },
+  adjustmentSummary: {
+    fontSize: typography.size.label,
+    color: colors.neutral.textPrimary,
+  },
+  adjustmentSection: {
+    gap: spacing.xs,
+  },
+  adjustmentSectionTitle: {
+    fontSize: typography.size.label,
+    fontWeight: typography.weight.bold,
+    color: colors.neutral.textPrimary,
+  },
+  adjustmentItem: {
+    borderWidth: 1,
+    borderColor: colors.neutral.border,
+    borderRadius: radius.sm,
+    padding: spacing.sm,
+    gap: spacing.xxs,
+    backgroundColor: colors.neutral.white,
+  },
+  adjustmentItemTitle: {
+    fontSize: typography.size.label,
+    fontWeight: typography.weight.bold,
+    color: colors.neutral.textPrimary,
+  },
+  adjustmentItemText: {
+    fontSize: typography.size.caption,
+    color: colors.neutral.textSecondary,
+  },
+  adjustmentItemNote: {
+    fontSize: typography.size.caption,
+    color: colors.neutral.muted,
+    fontStyle: "italic",
+  },
+  adjustmentNeutralText: {
+    fontSize: typography.size.caption,
+    color: colors.neutral.textSecondary,
+    fontStyle: "italic",
+  },
+  adjustmentWarningText: {
+    fontSize: typography.size.caption,
+    color: colors.semantic.error,
+  },
+  ionProjectionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: colors.neutral.border,
+    paddingVertical: spacing.xs,
+  },
+  ionProjectionLabel: {
+    fontSize: typography.size.label,
+    color: colors.neutral.textPrimary,
+    fontWeight: typography.weight.medium,
+  },
+  ionProjectionValue: {
+    fontSize: typography.size.caption,
+    fontWeight: typography.weight.bold,
+  },
+  ionProjectionValueOk: {
+    color: colors.semantic.success,
+  },
+  ionProjectionValueOut: {
+    color: colors.semantic.error,
   },
   // Style presets
   presetList: {
