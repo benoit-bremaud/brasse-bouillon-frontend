@@ -18,10 +18,18 @@ jest.mock("expo-haptics", () => ({
 }));
 
 const mockGetWaterProfileByLocation = jest.fn();
+const mockListDemoWaterLocationOptions = jest.fn();
 
 jest.mock("@/features/tools/application/eau.use-cases", () => ({
   getWaterProfileByLocation: (...args: unknown[]) =>
     mockGetWaterProfileByLocation(...args),
+  listDemoWaterLocationOptions: () => mockListDemoWaterLocationOptions(),
+}));
+
+jest.mock("@/core/data/data-source", () => ({
+  dataSource: {
+    useDemoData: true,
+  },
 }));
 
 function renderWithQueryClient(component: React.ReactElement) {
@@ -41,6 +49,24 @@ describe("EauCalculatorScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetWaterProfileByLocation.mockReset();
+    mockListDemoWaterLocationOptions.mockReset();
+    mockListDemoWaterLocationOptions.mockReturnValue([
+      {
+        id: "13001-marseille",
+        departmentCode: "13",
+        codePostal: "13001",
+        commune: "Marseille",
+        label: "13 · Marseille (13001)",
+      },
+      {
+        id: "69001-lyon",
+        departmentCode: "69",
+        codePostal: "69001",
+        commune: "Lyon",
+        label: "69 · Lyon (69001)",
+      },
+    ]);
+
     mockGetWaterProfileByLocation.mockResolvedValue({
       provider: "hubeau",
       codeInsee: "57770",
@@ -292,6 +318,15 @@ describe("EauCalculatorScreen", () => {
     });
     expect(screen.getByText("YUTZ CENTRE")).toBeTruthy();
     expect(screen.getByText("18")).toBeTruthy();
+  });
+
+  it("fills postal code and commune when selecting a demo location chip", () => {
+    renderWithQueryClient(<EauCalculatorScreen />);
+
+    fireEvent.press(screen.getByLabelText("Zone démo 69 · Lyon (69001)"));
+
+    expect(screen.getByDisplayValue("69001")).toBeTruthy();
+    expect(screen.getByDisplayValue("Lyon")).toBeTruthy();
   });
 
   it("displays lookup error", async () => {

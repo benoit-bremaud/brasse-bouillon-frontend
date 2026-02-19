@@ -1,4 +1,8 @@
-import { EauProfile, WaterProfileLookupInput } from "../domain/eau.types";
+import {
+  DemoWaterLocationOption,
+  EauProfile,
+  WaterProfileLookupInput,
+} from "../domain/eau.types";
 
 import { dataSource } from "@/core/data/data-source";
 import { demoWaterProfiles } from "@/mocks/demo-data";
@@ -37,6 +41,38 @@ function findDemoProfile(input: WaterProfileLookupInput): EauProfile | null {
     ...match.profile,
     annee: input.annee ?? getCurrentYear(),
   };
+}
+
+function toDemoLocationOption(
+  input: WaterProfileLookupInput,
+): DemoWaterLocationOption {
+  const codePostal = input.codePostal.trim();
+  const commune = input.commune.trim();
+  const departmentCode = codePostal.slice(0, 2);
+
+  return {
+    id: `${codePostal}-${commune.toLocaleLowerCase()}`,
+    departmentCode,
+    codePostal,
+    commune,
+    label: `${departmentCode} · ${commune} (${codePostal})`,
+  };
+}
+
+export function listDemoWaterLocationOptions(): DemoWaterLocationOption[] {
+  if (!dataSource.useDemoData) {
+    return [];
+  }
+
+  return demoWaterProfiles
+    .map((item) => toDemoLocationOption(item.lookup))
+    .sort((a, b) => {
+      if (a.departmentCode !== b.departmentCode) {
+        return a.departmentCode.localeCompare(b.departmentCode);
+      }
+
+      return a.commune.localeCompare(b.commune, "fr-FR");
+    });
 }
 
 export async function getWaterProfileByLocation(

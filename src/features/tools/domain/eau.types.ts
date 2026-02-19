@@ -25,3 +25,11 @@ export interface WaterProfileLookupInput {
   annee?: number;
   provider?: string;
 }
+
+export interface DemoWaterLocationOption {
+  id: string;
+  departmentCode: string;
+  codePostal: string;
+  commune: string;
+  label: string;
+}

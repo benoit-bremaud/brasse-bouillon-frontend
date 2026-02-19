@@ -14,14 +14,18 @@ import {
   TextInput,
   View,
 } from "react-native";
+import {
+  getWaterProfileByLocation,
+  listDemoWaterLocationOptions,
+} from "../application/eau.use-cases";
 
+import { dataSource } from "@/core/data/data-source";
 import { getErrorMessage } from "@/core/http/http-error";
 import { Card } from "@/core/ui/Card";
 import { ListHeader } from "@/core/ui/ListHeader";
 import { PrimaryButton } from "@/core/ui/PrimaryButton";
 import { Screen } from "@/core/ui/Screen";
 import { useMutation } from "@tanstack/react-query";
-import { getWaterProfileByLocation } from "../application/eau.use-cases";
 import { EauProfile } from "../domain/eau.types";
 
 type TabName = "profil" | "style" | "sels";
@@ -311,6 +315,23 @@ export function EauCalculatorScreen() {
   const canSearchWater =
     postalCodeText.trim().length === 5 && communeText.trim().length > 1;
 
+  const isDemoDataMode = dataSource.useDemoData;
+  const demoWaterLocations = isDemoDataMode
+    ? listDemoWaterLocationOptions()
+    : [];
+
+  const handleSelectDemoLocation = useCallback(
+    (codePostal: string, commune: string) => {
+      setPostalCodeText(codePostal);
+      setCommuneText(commune);
+      setLookupError(null);
+      setLookupResult(null);
+
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    },
+    [],
+  );
+
   const handleSearchWater = useCallback(() => {
     const payload = {
       codePostal: postalCodeText.trim(),
@@ -466,6 +487,36 @@ export function EauCalculatorScreen() {
                 Recherchez les caractéristiques de l'eau via code postal et
                 commune
               </Text>
+
+              {isDemoDataMode ? (
+                <View style={styles.demoLocationContainer}>
+                  <Text style={styles.inputLabel}>Zones démo disponibles</Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.demoLocationList}
+                  >
+                    {demoWaterLocations.map((location) => (
+                      <Pressable
+                        key={location.id}
+                        style={styles.demoLocationChip}
+                        onPress={() =>
+                          handleSelectDemoLocation(
+                            location.codePostal,
+                            location.commune,
+                          )
+                        }
+                        accessibilityRole="button"
+                        accessibilityLabel={`Zone démo ${location.label}`}
+                      >
+                        <Text style={styles.demoLocationChipText}>
+                          {location.label}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                </View>
+              ) : null}
 
               <View style={styles.lookupRow}>
                 <View style={styles.lookupFieldPostal}>
@@ -930,6 +981,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing.sm,
     marginBottom: spacing.sm,
+  },
+  demoLocationContainer: {
+    marginBottom: spacing.sm,
+  },
+  demoLocationList: {
+    gap: spacing.xs,
+    paddingVertical: spacing.xxs,
+  },
+  demoLocationChip: {
+    borderWidth: 1,
+    borderColor: colors.neutral.border,
+    borderRadius: radius.sm,
+    backgroundColor: colors.brand.background,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  demoLocationChipText: {
+    fontSize: typography.size.caption,
+    color: colors.neutral.textPrimary,
+    fontWeight: typography.weight.medium,
   },
   lookupFieldPostal: {
     flex: 2,

@@ -1,4 +1,8 @@
-import { getWaterProfileByLocation } from "@/features/tools/application/eau.use-cases";
+import {
+  getWaterProfileByLocation,
+  listDemoWaterLocationOptions,
+} from "@/features/tools/application/eau.use-cases";
+
 import { getWaterProfileByLocationApi } from "@/features/tools/data/eau.api";
 
 let mockUseDemoData = true;
@@ -44,6 +48,15 @@ describe("eau use-cases", () => {
     expect(getWaterProfileByLocationApi).not.toHaveBeenCalled();
   });
 
+  it("lists demo locations sorted by department then commune", () => {
+    const options = listDemoWaterLocationOptions();
+
+    expect(options.length).toBeGreaterThan(2);
+    expect(options[0]?.departmentCode).toBe("13");
+    expect(options[0]?.label).toBe("13 · Marseille (13001)");
+    expect(options[options.length - 1]?.departmentCode).toBe("75");
+  });
+
   it("throws when required fields are missing", async () => {
     await expect(
       getWaterProfileByLocation({ codePostal: "", commune: "" }),
@@ -85,6 +98,12 @@ describe("eau use-cases", () => {
       }),
     );
     expect(result).toEqual(apiProfile);
+  });
+
+  it("returns empty demo locations list when demo mode is disabled", () => {
+    mockUseDemoData = false;
+
+    expect(listDemoWaterLocationOptions()).toEqual([]);
   });
 
   it("throws not found in demo mode when lookup does not exist", async () => {
