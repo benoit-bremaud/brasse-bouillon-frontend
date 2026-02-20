@@ -7,6 +7,7 @@ import { Recipe, RecipeStep } from "@/features/recipes/domain/recipe.types";
 
 import { User } from "@/features/auth/domain/auth.types";
 import { Ingredient } from "@/features/ingredients/domain/ingredient.types";
+import { EauProfile } from "@/features/tools/domain/eau.types";
 
 export type Equipment = {
   id: string;
@@ -528,5 +529,236 @@ export const demoBatches: Batch[] = [
       batchId: "b-demo-2",
       status: "completed",
     })),
+  },
+];
+
+type DemoWaterProfile = {
+  lookup: {
+    codePostal: string;
+    commune: string;
+  };
+  profile: EauProfile;
+};
+
+export const demoWaterProfiles: DemoWaterProfile[] = [
+  {
+    lookup: {
+      codePostal: "13001",
+      commune: "Marseille",
+    },
+    profile: {
+      provider: "hubeau",
+      codeInsee: "13055",
+      annee: 2025,
+      nomReseau: "MARSEILLE CENTRE",
+      nbPrelevements: 16,
+      conformite: "C",
+      minerauxMgL: {
+        ca: 86.2,
+        mg: 12.7,
+        cl: 47.8,
+        so4: 52.4,
+        hco3: 265,
+      },
+      dureteFrancais: 28.9,
+    },
+  },
+  {
+    lookup: {
+      codePostal: "31000",
+      commune: "Toulouse",
+    },
+    profile: {
+      provider: "hubeau",
+      codeInsee: "31555",
+      annee: 2025,
+      nomReseau: "TOULOUSE CENTRE",
+      nbPrelevements: 15,
+      conformite: "C",
+      minerauxMgL: {
+        ca: 69.2,
+        mg: 5.8,
+        cl: 22.6,
+        so4: 29.4,
+        hco3: 205,
+      },
+      dureteFrancais: 20.1,
+    },
+  },
+  {
+    lookup: {
+      codePostal: "33000",
+      commune: "Bordeaux",
+    },
+    profile: {
+      provider: "hubeau",
+      codeInsee: "33063",
+      annee: 2025,
+      nomReseau: "BORDEAUX METROPOLE CENTRE",
+      nbPrelevements: 20,
+      conformite: "C",
+      minerauxMgL: {
+        ca: 64.5,
+        mg: 7.1,
+        cl: 24.3,
+        so4: 31.8,
+        hco3: 198,
+      },
+      dureteFrancais: 19.4,
+    },
+  },
+  {
+    lookup: {
+      codePostal: "35000",
+      commune: "Rennes",
+    },
+    profile: {
+      provider: "hubeau",
+      codeInsee: "35238",
+      annee: 2025,
+      nomReseau: "RENNES METROPOLE",
+      nbPrelevements: 13,
+      conformite: "C",
+      minerauxMgL: {
+        ca: 36.4,
+        mg: 4.9,
+        cl: 14.2,
+        so4: 18.6,
+        hco3: 118,
+      },
+      dureteFrancais: 12.6,
+    },
+  },
+  {
+    lookup: {
+      codePostal: "44000",
+      commune: "Nantes",
+    },
+    profile: {
+      provider: "hubeau",
+      codeInsee: "44109",
+      annee: 2025,
+      nomReseau: "NANTES LOIRE",
+      nbPrelevements: 17,
+      conformite: "C",
+      minerauxMgL: {
+        ca: 41.3,
+        mg: 5.2,
+        cl: 17.9,
+        so4: 22.4,
+        hco3: 132,
+      },
+      dureteFrancais: 14.1,
+    },
+  },
+  {
+    lookup: {
+      codePostal: "57970",
+      commune: "Yutz",
+    },
+    profile: {
+      provider: "hubeau",
+      codeInsee: "57770",
+      annee: 2025,
+      nomReseau: "YUTZ CENTRE",
+      nbPrelevements: 18,
+      conformite: "C",
+      minerauxMgL: {
+        ca: 78.4,
+        mg: 6.2,
+        cl: 21.7,
+        so4: 34.1,
+        hco3: 246,
+      },
+      dureteFrancais: 22.1,
+    },
+  },
+  {
+    lookup: {
+      codePostal: "67000",
+      commune: "Strasbourg",
+    },
+    profile: {
+      provider: "hubeau",
+      codeInsee: "67482",
+      annee: 2025,
+      nomReseau: "STRASBOURG NORD",
+      nbPrelevements: 14,
+      conformite: "C",
+      minerauxMgL: {
+        ca: 62.1,
+        mg: 4.4,
+        cl: 18.2,
+        so4: 27.5,
+        hco3: 188,
+      },
+      dureteFrancais: 17.3,
+    },
+  },
+  {
+    lookup: {
+      codePostal: "69001",
+      commune: "Lyon",
+    },
+    profile: {
+      provider: "hubeau",
+      codeInsee: "69123",
+      annee: 2025,
+      nomReseau: "LYON RHONE CENTRE",
+      nbPrelevements: 19,
+      conformite: "C",
+      minerauxMgL: {
+        ca: 73.8,
+        mg: 6.6,
+        cl: 19.8,
+        so4: 38.6,
+        hco3: 214,
+      },
+      dureteFrancais: 21.7,
+    },
+  },
+  {
+    lookup: {
+      codePostal: "75001",
+      commune: "Paris",
+    },
+    profile: {
+      provider: "hubeau",
+      codeInsee: "75056",
+      annee: 2025,
+      nomReseau: "PARIS CENTRE",
+      nbPrelevements: 21,
+      conformite: "C",
+      minerauxMgL: {
+        ca: 78.9,
+        mg: 6.4,
+        cl: 29.1,
+        so4: 35.2,
+        hco3: 238,
+      },
+      dureteFrancais: 23.4,
+    },
+  },
+  {
+    lookup: {
+      codePostal: "59000",
+      commune: "Lille",
+    },
+    profile: {
+      provider: "hubeau",
+      codeInsee: "59350",
+      annee: 2025,
+      nomReseau: "LILLE FLANDRES",
+      nbPrelevements: 18,
+      conformite: "C",
+      minerauxMgL: {
+        ca: 92.6,
+        mg: 8.9,
+        cl: 36.2,
+        so4: 61.7,
+        hco3: 284,
+      },
+      dureteFrancais: 31.6,
+    },
   },
 ];
