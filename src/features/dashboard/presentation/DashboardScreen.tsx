@@ -448,11 +448,12 @@ export function DashboardScreen() {
 const styles = StyleSheet.create({
   content: {
     paddingBottom: spacing.xl,
+    paddingTop: 0,
   },
   hero: {
     backgroundColor: colors.brand.primary,
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.lg,
+    paddingTop: spacing.md,
     paddingBottom: spacing.md,
     marginBottom: spacing.md,
   },
