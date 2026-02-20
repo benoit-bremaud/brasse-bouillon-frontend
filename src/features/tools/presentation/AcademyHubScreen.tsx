@@ -51,7 +51,7 @@ export function AcademyHubScreen() {
           <Pressable
             onPress={() =>
               router.push({
-                pathname: "/tools/[slug]",
+                pathname: "/(app)/tools/[slug]",
                 params: { slug: item.slug },
               })
             }
