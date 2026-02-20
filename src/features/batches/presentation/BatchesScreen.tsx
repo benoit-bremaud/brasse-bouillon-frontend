@@ -18,7 +18,14 @@ import { PrimaryButton } from "@/core/ui/PrimaryButton";
 import { Screen } from "@/core/ui/Screen";
 import { listBatches } from "@/features/batches/application/batches.use-cases";
 import { BatchSummary } from "@/features/batches/domain/batch.types";
+import { getSrmColor } from "@/features/tools/presentation/srm-colors";
+import { demoRecipes } from "@/mocks/demo-data";
 import { useRouter } from "expo-router";
+
+const getRecipeColorEbc = (recipeId: string): number => {
+  const recipe = demoRecipes.find((r) => r.id === recipeId);
+  return recipe?.stats?.colorEbc ?? 10;
+};
 
 export function BatchesScreen() {
   const router = useRouter();
@@ -86,25 +93,44 @@ export function BatchesScreen() {
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={fetchBatches} />
         }
-        renderItem={({ item }) => (
-          <Pressable onPress={() => router.push(`/(app)/batches/${item.id}`)}>
-            <Card style={styles.card}>
-              <View style={styles.cardTopRow}>
-                <Text style={styles.cardTitle}>
-                  Batch {item.id.slice(0, 8)}
-                </Text>
-                <Badge
-                  label={item.status}
-                  variant={item.status === "completed" ? "success" : "info"}
-                />
-              </View>
-              <Text style={styles.cardMeta}>
-                Étape courante: {item.currentStepOrder ?? "-"}
-              </Text>
-              <Text style={styles.cardMetaSecondary}>Ouvrir le détail →</Text>
-            </Card>
-          </Pressable>
-        )}
+        renderItem={({ item }) => {
+          const ebc = getRecipeColorEbc(item.recipeId);
+          const srm = ebc * 0.508;
+          const beerColor = getSrmColor(srm);
+
+          return (
+            <Pressable onPress={() => router.push(`/(app)/batches/${item.id}`)}>
+              <Card style={styles.card}>
+                <View style={styles.cardContent}>
+                  <View
+                    style={[styles.beerIcon, { backgroundColor: beerColor }]}
+                  >
+                    <Text style={styles.beerIconText}>🍺</Text>
+                  </View>
+                  <View style={styles.cardInfo}>
+                    <View style={styles.cardTopRow}>
+                      <Text style={styles.cardTitle}>
+                        Batch {item.id.slice(0, 8)}
+                      </Text>
+                      <Badge
+                        label={item.status}
+                        variant={
+                          item.status === "completed" ? "success" : "info"
+                        }
+                      />
+                    </View>
+                    <Text style={styles.cardMeta}>
+                      Étape courante: {item.currentStepOrder ?? "-"}
+                    </Text>
+                    <Text style={styles.cardMetaSecondary}>
+                      Ouvrir le détail →
+                    </Text>
+                  </View>
+                </View>
+              </Card>
+            </Pressable>
+          );
+        }}
       />
     </Screen>
   );
@@ -144,6 +170,24 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: spacing.sm,
+  },
+  cardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  beerIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.lg,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  beerIconText: {
+    fontSize: 20,
+  },
+  cardInfo: {
+    flex: 1,
   },
   cardTopRow: {
     flexDirection: "row",
