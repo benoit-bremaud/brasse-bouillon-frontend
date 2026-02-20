@@ -38,7 +38,7 @@ export default function AppLayout() {
             tabBarStyle: { display: "none" },
             headerTitle: () => (
               <View style={styles.headerTitleContainer}>
-                <BrandLogo variant="icon" size={24} />
+                <BrandLogo variant="icon" size={32} />
                 <Text style={styles.headerTitleText}>Brasse Bouillon</Text>
               </View>
             ),
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   headerTitleContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   headerTitleText: {
     color: colors.neutral.textPrimary,
