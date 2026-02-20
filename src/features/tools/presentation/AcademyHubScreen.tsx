@@ -85,13 +85,10 @@ export function AcademyHubScreen() {
 const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: spacing.sm,
     paddingBottom: spacing.sm,
-  },
-  backButton: {
-    padding: spacing.xs,
-    marginRight: spacing.xs,
   },
   list: {
     paddingBottom: spacing.md,
