@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   headerTitleContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
+    gap: spacing.xs,
   },
   headerTitleText: {
     color: colors.brand.secondary,
