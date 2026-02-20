@@ -83,7 +83,7 @@ export function BatchesScreen() {
       <View style={styles.header}>
         <ListHeader title="Mes Brassins" subtitle="Suivi de tes brassins" />
         <Pressable
-          onPress={() => router.push("/tools")}
+          onPress={() => router.push("/academy")}
           style={styles.academyButton}
         >
           <Ionicons
