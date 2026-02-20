@@ -1,5 +1,5 @@
-import { colors, spacing, typography } from "@/core/theme";
 import { StyleSheet, Text, View } from "react-native";
+import { colors, spacing, typography } from "@/core/theme";
 
 import React from "react";
 
@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
   title: {
     fontSize: typography.size.h2,
