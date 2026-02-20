@@ -36,7 +36,7 @@ export function ToolsScreen() {
             color={colors.brand.secondary}
           />
         </Pressable>
-        <ListHeader title="Outils" subtitle="Calculateurs et simulateurs" />
+        <ListHeader title="My Tools" subtitle="Calculateurs et simulateurs" />
       </View>
 
       <FlatList
