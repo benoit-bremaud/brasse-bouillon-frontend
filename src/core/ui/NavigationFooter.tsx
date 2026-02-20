@@ -12,7 +12,7 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Home", icon: "home", href: "/(app)/dashboard" },
-  { label: "Brassins", icon: "flask", href: "/(app)/batches" },
+  { label: "Brassins", icon: "cafe", href: "/(app)/batches" },
   { label: "Recettes", icon: "book", href: "/(app)/recipes" },
   { label: "Ingr.", icon: "restaurant", href: "/(app)/ingredients" },
   { label: "Outils", icon: "calculator", href: "/(app)/tools" },
