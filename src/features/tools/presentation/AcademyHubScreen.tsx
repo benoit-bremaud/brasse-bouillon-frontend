@@ -2,7 +2,6 @@ import { colors, radius, spacing, typography } from "@/core/theme";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { Card } from "@/core/ui/Card";
-import { ListHeader } from "@/core/ui/ListHeader";
 import { Screen } from "@/core/ui/Screen";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -26,10 +25,17 @@ export function AcademyHubScreen() {
 
   return (
     <Screen>
-      <ListHeader
-        title="Académie brassicole"
-        subtitle="Base pédagogique, scientifique et historique du brassage"
-      />
+      <View style={styles.headerRow}>
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Text style={styles.backArrow}>←</Text>
+        </Pressable>
+        <View style={styles.headerText}>
+          <Text style={styles.headerTitle}>Académie brassicole</Text>
+          <Text style={styles.headerSubtitle}>
+            Base pédagogique et scientifique
+          </Text>
+        </View>
+      </View>
 
       <ScrollView contentContainerStyle={styles.content}>
         {academyTopics.map((topic) => (
@@ -78,9 +84,40 @@ export function AcademyHubScreen() {
 }
 
 const styles = StyleSheet.create({
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.neutral.border,
+    backgroundColor: colors.neutral.white,
+  },
+  backButton: {
+    padding: spacing.xs,
+    marginRight: spacing.sm,
+  },
+  backArrow: {
+    fontSize: 20,
+    color: colors.brand.secondary,
+    fontWeight: typography.weight.bold,
+  },
+  headerText: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: typography.size.h2,
+    fontWeight: typography.weight.bold,
+    color: colors.neutral.textPrimary,
+  },
+  headerSubtitle: {
+    fontSize: typography.size.caption,
+    color: colors.neutral.textSecondary,
+  },
   content: {
     paddingBottom: spacing.lg,
     paddingHorizontal: spacing.sm,
+    paddingTop: spacing.sm,
   },
   cardPressable: {
     borderRadius: radius.lg,
