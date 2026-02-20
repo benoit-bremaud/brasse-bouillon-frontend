@@ -1,3 +1,4 @@
+import { colors, radius, spacing, typography } from "@/core/theme";
 import {
   Image,
   Pressable,
@@ -6,15 +7,14 @@ import {
   Text,
   View,
 } from "react-native";
-import { colors, radius, spacing, typography } from "@/core/theme";
 
 import { Badge } from "@/core/ui/Badge";
 import { Card } from "@/core/ui/Card";
 import { ListHeader } from "@/core/ui/ListHeader";
-import React from "react";
 import { Screen } from "@/core/ui/Screen";
-import { academyTopics } from "./academy-topics";
 import { useRouter } from "expo-router";
+import React from "react";
+import { academyTopics } from "./academy-topics";
 
 export function AcademyHubScreen() {
   const router = useRouter();
