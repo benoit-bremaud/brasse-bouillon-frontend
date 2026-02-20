@@ -38,7 +38,7 @@ export function AcademyHubScreen() {
           />
         </Pressable>
         <ListHeader
-          title="Academy"
+          title="My Academy"
           subtitle="Base pédagogique et scientifique"
         />
       </View>
