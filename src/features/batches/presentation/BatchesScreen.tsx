@@ -20,6 +20,7 @@ import { listBatches } from "@/features/batches/application/batches.use-cases";
 import { BatchSummary } from "@/features/batches/domain/batch.types";
 import { getSrmColor } from "@/features/tools/presentation/srm-colors";
 import { demoRecipes } from "@/mocks/demo-data";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 const getRecipeColorEbc = (recipeId: string): number => {
@@ -58,23 +59,23 @@ export function BatchesScreen() {
       error={error}
       onRetry={fetchBatches}
     >
-      <ListHeader
-        title="My Batches"
-        subtitle="Suivi de tes brassins en cours"
-        action={
-          <View style={styles.headerActions}>
-            <Pressable
-              onPress={() => router.push("/tools")}
-              style={styles.toolsButton}
-            >
-              <Text style={styles.toolsText}>Académie</Text>
-            </Pressable>
-            <Pressable onPress={fetchBatches} style={styles.refreshButton}>
-              <Text style={styles.refreshText}>Refresh</Text>
-            </Pressable>
-          </View>
-        }
-      />
+      <View style={styles.header}>
+        <ListHeader
+          title="Mes Brassins"
+          subtitle="Suivi de tes brassins en cours"
+        />
+        <Pressable
+          onPress={() => router.push("/tools")}
+          style={styles.academyButton}
+        >
+          <Ionicons
+            name="school-outline"
+            size={18}
+            color={colors.brand.secondary}
+          />
+          <Text style={styles.academyText}>Académie</Text>
+        </Pressable>
+      </View>
 
       {showEmptyState ? (
         <EmptyStateCard
@@ -105,7 +106,11 @@ export function BatchesScreen() {
                   <View
                     style={[styles.beerIcon, { backgroundColor: beerColor }]}
                   >
-                    <Text style={styles.beerIconText}>🍺</Text>
+                    <Ionicons
+                      name="beer"
+                      size={24}
+                      color={colors.neutral.white}
+                    />
                   </View>
                   <View style={styles.cardInfo}>
                     <View style={styles.cardTopRow}>
@@ -113,19 +118,25 @@ export function BatchesScreen() {
                         Batch {item.id.slice(0, 8)}
                       </Text>
                       <Badge
-                        label={item.status}
+                        label={
+                          item.status === "completed" ? "Terminé" : "En cours"
+                        }
                         variant={
                           item.status === "completed" ? "success" : "info"
                         }
                       />
                     </View>
                     <Text style={styles.cardMeta}>
-                      Étape courante: {item.currentStepOrder ?? "-"}
-                    </Text>
-                    <Text style={styles.cardMetaSecondary}>
-                      Ouvrir le détail →
+                      {item.status === "completed"
+                        ? "Brassin terminé"
+                        : `Étape ${(item.currentStepOrder ?? 0) + 1}`}
                     </Text>
                   </View>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={colors.neutral.muted}
+                  />
                 </View>
               </Card>
             </Pressable>
@@ -137,36 +148,32 @@ export function BatchesScreen() {
 }
 
 const styles = StyleSheet.create({
-  headerActions: {
-    alignItems: "flex-end",
-    gap: spacing.xs,
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: spacing.sm,
+    paddingBottom: spacing.sm,
   },
-  toolsButton: {
+  academyButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xxs,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
-    borderRadius: radius.sm,
-    backgroundColor: colors.brand.primary,
+    borderRadius: radius.lg,
+    backgroundColor: colors.brand.background,
+    borderWidth: 1,
+    borderColor: colors.brand.secondary,
   },
-  toolsText: {
-    color: colors.neutral.white,
+  academyText: {
+    color: colors.brand.secondary,
     fontSize: typography.size.caption,
-    lineHeight: typography.lineHeight.caption,
-    fontWeight: typography.weight.medium,
-  },
-  refreshButton: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.sm,
-    backgroundColor: colors.neutral.textPrimary,
-  },
-  refreshText: {
-    color: colors.neutral.white,
-    fontSize: typography.size.caption,
-    lineHeight: typography.lineHeight.caption,
     fontWeight: typography.weight.medium,
   },
   list: {
     paddingBottom: spacing.md,
+    paddingHorizontal: spacing.sm,
   },
   card: {
     marginBottom: spacing.sm,
@@ -183,9 +190,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  beerIconText: {
-    fontSize: 20,
-  },
   cardInfo: {
     flex: 1,
   },
@@ -197,18 +201,12 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: typography.size.body,
     lineHeight: typography.lineHeight.body,
-    fontWeight: typography.weight.medium,
+    fontWeight: typography.weight.bold,
     color: colors.neutral.textPrimary,
   },
   cardMeta: {
-    marginTop: spacing.sm,
+    marginTop: spacing.xxs,
     color: colors.neutral.textSecondary,
-    fontSize: typography.size.label,
-    lineHeight: typography.lineHeight.label,
-  },
-  cardMetaSecondary: {
-    marginTop: spacing.xs,
-    color: colors.neutral.muted,
     fontSize: typography.size.label,
     lineHeight: typography.lineHeight.label,
   },
