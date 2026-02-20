@@ -35,10 +35,13 @@ export default function AppLayout() {
         <Tabs
           screenOptions={{
             headerShown: true,
+            headerStyle: {
+              height: 90,
+            },
             tabBarStyle: { display: "none" },
             headerTitle: () => (
               <View style={styles.headerTitleContainer}>
-                <BrandLogo variant="icon" size={32} />
+                <BrandLogo variant="icon" size={56} />
                 <Text style={styles.headerTitleText}>Brasse Bouillon</Text>
               </View>
             ),
@@ -48,6 +51,7 @@ export default function AppLayout() {
             name="dashboard"
             options={{
               title: "Dashboard",
+              headerShown: false,
               tabBarIcon: ({ color, size }) => (
                 <Ionicons name="home-outline" size={size} color={color} />
               ),
