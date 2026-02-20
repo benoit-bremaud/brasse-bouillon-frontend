@@ -113,7 +113,7 @@ export function RecipesScreen() {
                     style={[styles.recipeIcon, { backgroundColor: beerColor }]}
                   >
                     <Ionicons
-                      name="leaf"
+                      name="document-text"
                       size={24}
                       color={colors.neutral.white}
                     />
