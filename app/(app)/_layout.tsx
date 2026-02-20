@@ -35,6 +35,7 @@ export default function AppLayout() {
         <Tabs
           screenOptions={{
             headerShown: true,
+            tabBarStyle: { display: "none" },
             headerTitle: () => (
               <View style={styles.headerTitleContainer}>
                 <BrandLogo variant="icon" size={24} />
