@@ -36,12 +36,12 @@ export default function AppLayout() {
           screenOptions={{
             headerShown: true,
             headerStyle: {
-              height: 130,
+              height: 80,
             },
             tabBarStyle: { display: "none" },
             headerTitle: () => (
               <View style={styles.headerTitleContainer}>
-                <BrandLogo variant="icon" size={120} />
+                <BrandLogo variant="icon" size={50} />
                 <Text style={styles.headerTitleText}>Brasse Bouillon</Text>
               </View>
             ),
