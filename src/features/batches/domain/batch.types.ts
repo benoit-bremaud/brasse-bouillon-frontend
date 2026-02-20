@@ -1,6 +1,13 @@
 import { RecipeStepType } from "@/features/recipes/domain/recipe.types";
 
-export type BatchStatus = "in_progress" | "completed";
+export type BatchStatus =
+  | "pending"
+  | "mashing"
+  | "boiling"
+  | "fermenting"
+  | "carbonating"
+  | "completed"
+  | "in_progress";
 
 export type BatchStepStatus = "pending" | "in_progress" | "completed";
 

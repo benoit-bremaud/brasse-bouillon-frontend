@@ -1,4 +1,8 @@
 import { colors, radius, spacing, typography } from "@/core/theme";
+import {
+  BatchStatus,
+  BatchSummary,
+} from "@/features/batches/domain/batch.types";
 import React, { useEffect, useState } from "react";
 import {
   FlatList,
@@ -17,7 +21,6 @@ import { ListHeader } from "@/core/ui/ListHeader";
 import { PrimaryButton } from "@/core/ui/PrimaryButton";
 import { Screen } from "@/core/ui/Screen";
 import { listBatches } from "@/features/batches/application/batches.use-cases";
-import { BatchSummary } from "@/features/batches/domain/batch.types";
 import { getSrmColor } from "@/features/tools/presentation/srm-colors";
 import { demoRecipes } from "@/mocks/demo-data";
 import { Ionicons } from "@expo/vector-icons";
@@ -26,6 +29,24 @@ import { useRouter } from "expo-router";
 const getRecipeColorEbc = (recipeId: string): number => {
   const recipe = demoRecipes.find((r) => r.id === recipeId);
   return recipe?.stats?.colorEbc ?? 10;
+};
+
+const getStatusLabel = (status: BatchStatus): string => {
+  const labels: Record<BatchStatus, string> = {
+    pending: "Pending",
+    mashing: "Mashing",
+    boiling: "Boiling",
+    fermenting: "Fermenting",
+    carbonating: "Carbonating",
+    completed: "Done",
+    in_progress: "In Progress",
+  };
+  return labels[status] ?? status;
+};
+
+const getStatusVariant = (status: BatchStatus): "success" | "info" => {
+  if (status === "completed") return "success";
+  return "info";
 };
 
 export function BatchesScreen() {
@@ -60,10 +81,7 @@ export function BatchesScreen() {
       onRetry={fetchBatches}
     >
       <View style={styles.header}>
-        <ListHeader
-          title="Mes Brassins"
-          subtitle="Suivi de tes brassins en cours"
-        />
+        <ListHeader title="Mes Brassins" subtitle="Suivi de tes brassins" />
         <Pressable
           onPress={() => router.push("/tools")}
           style={styles.academyButton}
@@ -73,17 +91,15 @@ export function BatchesScreen() {
             size={18}
             color={colors.brand.secondary}
           />
-          <Text style={styles.academyText}>Académie</Text>
+          <Text style={styles.academyText}>Academy</Text>
         </Pressable>
       </View>
 
       {showEmptyState ? (
         <EmptyStateCard
-          title="Aucun batch démarré"
+          title="Aucun batch"
           description="Lance un batch depuis une recette."
-          action={
-            <PrimaryButton label="Recharger la liste" onPress={fetchBatches} />
-          }
+          action={<PrimaryButton label="Recharger" onPress={fetchBatches} />}
         />
       ) : null}
 
@@ -118,19 +134,10 @@ export function BatchesScreen() {
                         Batch {item.id.slice(0, 8)}
                       </Text>
                       <Badge
-                        label={
-                          item.status === "completed" ? "Terminé" : "En cours"
-                        }
-                        variant={
-                          item.status === "completed" ? "success" : "info"
-                        }
+                        label={getStatusLabel(item.status)}
+                        variant={getStatusVariant(item.status)}
                       />
                     </View>
-                    <Text style={styles.cardMeta}>
-                      {item.status === "completed"
-                        ? "Brassin terminé"
-                        : `Étape ${(item.currentStepOrder ?? 0) + 1}`}
-                    </Text>
                   </View>
                   <Ionicons
                     name="chevron-forward"
@@ -203,11 +210,5 @@ const styles = StyleSheet.create({
     lineHeight: typography.lineHeight.body,
     fontWeight: typography.weight.bold,
     color: colors.neutral.textPrimary,
-  },
-  cardMeta: {
-    marginTop: spacing.xxs,
-    color: colors.neutral.textSecondary,
-    fontSize: typography.size.label,
-    lineHeight: typography.lineHeight.label,
   },
 });
