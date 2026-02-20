@@ -69,11 +69,6 @@ export function AcademyHubScreen() {
                   variant={topic.status === "ready" ? "success" : "neutral"}
                 />
               </View>
-
-              <View style={styles.cardFooter}>
-                <Text style={styles.cardFooterText}>Ouvrir le thème</Text>
-                <Text style={styles.cardFooterArrow}>→</Text>
-              </View>
             </Card>
           </Pressable>
         ))}
@@ -129,26 +124,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.xs,
-  },
-  cardFooter: {
-    marginTop: spacing.sm,
-    paddingTop: spacing.xs,
-    borderTopWidth: 1,
-    borderTopColor: colors.neutral.border,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  cardFooterText: {
-    color: colors.brand.secondary,
-    fontSize: typography.size.caption,
-    lineHeight: typography.lineHeight.caption,
-    fontWeight: typography.weight.medium,
-  },
-  cardFooterArrow: {
-    color: colors.brand.secondary,
-    fontSize: typography.size.body,
-    lineHeight: typography.lineHeight.body,
-    fontWeight: typography.weight.bold,
   },
 });
