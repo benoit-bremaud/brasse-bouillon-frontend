@@ -49,7 +49,7 @@ const QUICK_ACTIONS: QuickAction[] = [
     label: "Academy",
     icon: "school",
     color: colors.semantic.warning,
-    href: "/(app)/tools",
+    href: "/(app)/academy",
   },
 ];
 
