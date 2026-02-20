@@ -110,10 +110,10 @@ export function RecipesScreen() {
               <Card style={styles.card}>
                 <View style={styles.cardContent}>
                   <View
-                    style={[styles.beerIcon, { backgroundColor: beerColor }]}
+                    style={[styles.recipeIcon, { backgroundColor: beerColor }]}
                   >
                     <Ionicons
-                      name="beer"
+                      name="leaf"
                       size={24}
                       color={colors.neutral.white}
                     />
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.sm,
   },
-  beerIcon: {
+  recipeIcon: {
     width: 48,
     height: 48,
     borderRadius: radius.lg,
