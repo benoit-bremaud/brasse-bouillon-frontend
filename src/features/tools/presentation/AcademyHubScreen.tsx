@@ -30,13 +30,6 @@ export function AcademyHubScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons
-            name="arrow-back"
-            size={24}
-            color={colors.brand.secondary}
-          />
-        </Pressable>
         <ListHeader
           title="My Academy"
           subtitle="Base pédagogique et scientifique"
