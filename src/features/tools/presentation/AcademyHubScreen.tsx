@@ -8,7 +8,6 @@ import {
   View,
 } from "react-native";
 
-import { Badge } from "@/core/ui/Badge";
 import { Card } from "@/core/ui/Card";
 import { ListHeader } from "@/core/ui/ListHeader";
 import { Screen } from "@/core/ui/Screen";
@@ -55,20 +54,19 @@ export function AcademyHubScreen() {
                 />
               </View>
 
-              <Text style={styles.cardDescription}>
-                {topic.shortDescription}
-              </Text>
-
-              <View style={styles.badgesRow}>
-                <Badge label={topic.focus} />
-                <Badge label={topic.estimatedReadTime} />
-                <Badge
-                  label={
-                    topic.status === "ready" ? "Prêt" : "Bientôt disponible"
-                  }
-                  variant={topic.status === "ready" ? "success" : "neutral"}
-                />
+              <View style={styles.keywordsRow}>
+                {topic.keywords?.map((keyword, index) => (
+                  <View key={index} style={styles.keywordChip}>
+                    <Text style={styles.keywordText}>{keyword}</Text>
+                  </View>
+                ))}
               </View>
+
+              {topic.status === "ready" && (
+                <View style={styles.readyBadge}>
+                  <Text style={styles.readyText}>✓ Disponible</Text>
+                </View>
+              )}
             </Card>
           </Pressable>
         ))}
@@ -113,16 +111,34 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingRight: spacing.xs,
   },
-  cardDescription: {
-    color: colors.neutral.textSecondary,
-    fontSize: typography.size.label,
-    lineHeight: typography.lineHeight.label,
-    marginTop: spacing.sm,
-  },
-  badgesRow: {
+  keywordsRow: {
     marginTop: spacing.sm,
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.xs,
+  },
+  keywordChip: {
+    backgroundColor: colors.brand.background,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xxs,
+  },
+  keywordText: {
+    fontSize: typography.size.caption,
+    color: colors.brand.secondary,
+    fontWeight: typography.weight.medium,
+  },
+  readyBadge: {
+    marginTop: spacing.sm,
+    alignSelf: "flex-start",
+    backgroundColor: colors.semantic.success,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xxs,
+  },
+  readyText: {
+    fontSize: typography.size.caption,
+    color: colors.neutral.white,
+    fontWeight: typography.weight.bold,
   },
 });

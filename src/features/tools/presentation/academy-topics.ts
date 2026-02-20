@@ -21,6 +21,7 @@ export type AcademyTopic = {
   mascotVariant: AcademyMascotVariant;
   mascotImage: ImageSourcePropType;
   mascotAlt: string;
+  keywords?: string[];
 };
 
 const fallbackMascot = mascotDefault;
@@ -46,6 +47,7 @@ const academyTopicsData: AcademyTopic[] = [
     mascotVariant: "historian",
     mascotImage: fallbackMascot,
     mascotAlt: "Mascotte Brasse-Bouillon en professeur d'histoire",
+    keywords: ["Histoire", "4 ingrédients", "Base scientifique"],
   },
   {
     slug: "fermentescibles",
@@ -60,6 +62,7 @@ const academyTopicsData: AcademyTopic[] = [
     mascotVariant: "default",
     mascotImage: fallbackMascot,
     mascotAlt: "Mascotte Brasse-Bouillon thématique fermentescibles",
+    keywords: ["OG", "FG", "ABV", "Atténuation", "Densité"],
   },
   {
     slug: "couleur",
@@ -74,12 +77,13 @@ const academyTopicsData: AcademyTopic[] = [
     mascotVariant: "default",
     mascotImage: fallbackMascot,
     mascotAlt: "Mascotte Brasse-Bouillon thématique couleur",
+    keywords: ["SRM", "EBC", "MCU", "Morey", "Lovibond"],
   },
   {
     slug: "houblons",
     title: "Houblons",
     shortDescription:
-      "IBU Tinseth, BU:GU et stratégie d'ajouts pour équilibrer amertume, saveur et arômes.",
+      "IBU Tinseth, BU:GU et stratégie d'ajouts pour équilibrer amertume, saveur et thérapeuti.",
     focus: "Amertume et aromatique",
     order: 4,
     estimatedReadTime: "10 min",
@@ -88,6 +92,7 @@ const academyTopicsData: AcademyTopic[] = [
     mascotVariant: "hop-expert",
     mascotImage: fallbackMascot,
     mascotAlt: "Mascotte Brasse-Bouillon experte des houblons",
+    keywords: ["IBU", "BU:GU", "AA", "Houblonnage", "Acidité alpha"],
   },
   {
     slug: "eau",
@@ -102,6 +107,7 @@ const academyTopicsData: AcademyTopic[] = [
     mascotVariant: "chemist",
     mascotImage: fallbackMascot,
     mascotAlt: "Mascotte Brasse-Bouillon en chimiste de l'eau",
+    keywords: ["pH", "RA", "SO₄/Cl", "Profils", "Sels"],
   },
   {
     slug: "rendement",
@@ -116,6 +122,7 @@ const academyTopicsData: AcademyTopic[] = [
     mascotVariant: "default",
     mascotImage: fallbackMascot,
     mascotAlt: "Mascotte Brasse-Bouillon thématique rendement",
+    keywords: ["Efficacité", "Extract", "Mash", "Sparge", "Pertes"],
   },
   {
     slug: "levures",
@@ -130,6 +137,13 @@ const academyTopicsData: AcademyTopic[] = [
     mascotVariant: "yeast-lab",
     mascotImage: fallbackMascot,
     mascotAlt: "Mascotte Brasse-Bouillon en laboratoire levures",
+    keywords: [
+      "Pitching",
+      "Starter",
+      "Atténuation",
+      "Viabilité",
+      "Température",
+    ],
   },
   {
     slug: "carbonatation",
@@ -144,6 +158,7 @@ const academyTopicsData: AcademyTopic[] = [
     mascotVariant: "default",
     mascotImage: fallbackMascot,
     mascotAlt: "Mascotte Brasse-Bouillon thématique carbonatation",
+    keywords: ["CO₂", "Priming", "Volumes", "Bouteille", "Fût"],
   },
   {
     slug: "avances",
@@ -158,6 +173,7 @@ const academyTopicsData: AcademyTopic[] = [
     mascotVariant: "chemist",
     mascotImage: fallbackMascot,
     mascotAlt: "Mascotte Brasse-Bouillon thématique calculs avancés",
+    keywords: ["DK", "Kolbach", "β-glucanes", "Fan", "Protéines"],
   },
   {
     slug: "glossaire",
@@ -172,6 +188,7 @@ const academyTopicsData: AcademyTopic[] = [
     mascotVariant: "historian",
     mascotImage: fallbackMascot,
     mascotAlt: "Mascotte Brasse-Bouillon thématique glossaire",
+    keywords: ["Vocabulaire", "Termes techniques", "A-Z"],
   },
 ];
 
