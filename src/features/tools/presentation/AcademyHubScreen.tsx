@@ -9,9 +9,7 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { academyTopics } from "./academy-topics";
 
-// Using 'any' because some icon names may not be in Ionicons type
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const TOPIC_ICONS: Record<string, any> = {
+const TOPIC_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   introduction: "book",
   fermentescibles: "beer",
   couleur: "color-palette",
