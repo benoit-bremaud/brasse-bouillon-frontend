@@ -3,7 +3,7 @@ import { StyleSheet, Text, TextProps } from "react-native";
 
 import React from "react";
 
-type Variant = "neutral" | "info" | "success";
+type Variant = "neutral" | "info" | "success" | "warning";
 
 type Props = TextProps & {
   label: string;
@@ -31,6 +31,13 @@ const variantStyles: Record<Variant, { container: object; text: object }> = {
       borderColor: colors.semantic.success,
     },
     text: { color: colors.semantic.success },
+  },
+  warning: {
+    container: {
+      backgroundColor: "#fef9e6",
+      borderColor: colors.semantic.warning,
+    },
+    text: { color: colors.semantic.warning },
   },
 };
 
