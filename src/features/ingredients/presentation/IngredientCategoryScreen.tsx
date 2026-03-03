@@ -28,9 +28,11 @@ import {
 } from "react-native";
 
 import { getErrorMessage } from "@/core/http/http-error";
+import { navigateBackWithFallback } from "@/core/navigation/back-navigation";
 import { normalizeRouteParam } from "@/core/navigation/route-params";
 import { Card } from "@/core/ui/Card";
 import { EmptyStateCard } from "@/core/ui/EmptyStateCard";
+import { HeaderBackButton } from "@/core/ui/HeaderBackButton";
 import { ListHeader } from "@/core/ui/ListHeader";
 import { Screen } from "@/core/ui/Screen";
 import { listIngredientsByCategory } from "@/features/ingredients/application/ingredients.use-cases";
@@ -217,6 +219,10 @@ export function IngredientCategoryScreen({
   const presentation = ingredientCategoryPresentationById[category];
   const categoryPageTitle = getIngredientCategoryPageTitle(category);
 
+  const handleGoBack = () => {
+    navigateBackWithFallback(router, "/(app)/ingredients");
+  };
+
   const navigateToIngredientDetails = (ingredient: IngredientListItem) => {
     const ingredientCategory = isMaltProduct(ingredient)
       ? "malt"
@@ -267,20 +273,27 @@ export function IngredientCategoryScreen({
         title={categoryPageTitle}
         subtitle="Recherche et filtres rapides"
         action={
-          <View
-            style={[
-              styles.headerCategoryIcon,
-              { backgroundColor: presentation.iconColor + "20" },
-            ]}
-            accessible={false}
-            accessibilityElementsHidden
-            importantForAccessibility="no-hide-descendants"
-          >
-            <Ionicons
-              name={presentation.iconName}
-              size={20}
-              color={presentation.iconColor}
+          <View style={styles.headerActions}>
+            <HeaderBackButton
+              onPress={handleGoBack}
+              label="Ingrédients"
+              accessibilityLabel="Retour à la liste des ingrédients"
             />
+            <View
+              style={[
+                styles.headerCategoryIcon,
+                { backgroundColor: presentation.iconColor + "20" },
+              ]}
+              accessible={false}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            >
+              <Ionicons
+                name={presentation.iconName}
+                size={20}
+                color={presentation.iconColor}
+              />
+            </View>
           </View>
         }
       />
@@ -411,6 +424,11 @@ export function IngredientCategoryScreen({
 }
 
 const styles = StyleSheet.create({
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
   headerCategoryIcon: {
     width: 36,
     height: 36,

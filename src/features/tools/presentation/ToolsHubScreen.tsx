@@ -1,7 +1,9 @@
 import { colors, radius, spacing, typography } from "@/core/theme";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
+import { navigateBackWithFallback } from "@/core/navigation/back-navigation";
 import { Card } from "@/core/ui/Card";
+import { HeaderBackButton } from "@/core/ui/HeaderBackButton";
 import { ListHeader } from "@/core/ui/ListHeader";
 import { Screen } from "@/core/ui/Screen";
 import { academyTopics } from "@/features/tools/data";
@@ -23,6 +25,10 @@ const CALCULATOR_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
 export function ToolsHubScreen() {
   const router = useRouter();
 
+  const handleGoBack = () => {
+    navigateBackWithFallback(router, "/(app)/dashboard");
+  };
+
   const calculatorTopics = academyTopics
     .filter((topic) => topic.hasCalculator)
     .slice()
@@ -35,6 +41,13 @@ export function ToolsHubScreen() {
       <ListHeader
         title="Calculateurs"
         subtitle="Tes outils de calcul brassicoles"
+        action={
+          <HeaderBackButton
+            onPress={handleGoBack}
+            label="Accueil"
+            accessibilityLabel="Retour à l'accueil"
+          />
+        }
       />
 
       <ScrollView contentContainerStyle={styles.content}>

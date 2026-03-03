@@ -12,6 +12,9 @@ import { IngredientCategoryScreen } from "@/features/ingredients/presentation/In
 import React from "react";
 
 const mockPush = jest.fn();
+const mockReplace = jest.fn();
+const mockBack = jest.fn();
+const mockCanGoBack = jest.fn();
 
 jest.mock("@expo/vector-icons", () => {
   return {
@@ -25,8 +28,9 @@ jest.mock("expo-router", () => {
     ...actual,
     useRouter: () => ({
       push: mockPush,
-      replace: jest.fn(),
-      back: jest.fn(),
+      replace: mockReplace,
+      back: mockBack,
+      canGoBack: mockCanGoBack,
     }),
   };
 });
@@ -91,6 +95,10 @@ function renderIngredientCategoryScreen({
 describe("IngredientCategoryScreen", () => {
   beforeEach(() => {
     mockPush.mockReset();
+    mockReplace.mockReset();
+    mockBack.mockReset();
+    mockCanGoBack.mockReset();
+    mockCanGoBack.mockReturnValue(false);
     mockedListIngredientsByCategory.mockReset();
     mockedListMalts.mockReset();
     mockedListMalts.mockResolvedValue([
@@ -127,6 +135,33 @@ describe("IngredientCategoryScreen", () => {
     expect(mockedListIngredientsByCategory).not.toHaveBeenCalled();
   });
 
+  it("uses fallback navigation to ingredients root when pressing header back", async () => {
+    renderIngredientCategoryScreen({ categoryParam: "malt" });
+
+    const backButton = await screen.findByLabelText(
+      "Retour à la liste des ingrédients",
+    );
+
+    fireEvent.press(backButton);
+
+    expect(mockReplace).toHaveBeenCalledWith("/(app)/ingredients");
+  });
+
+  it("uses history back when available from header back action", async () => {
+    mockCanGoBack.mockReturnValueOnce(true);
+
+    renderIngredientCategoryScreen({ categoryParam: "malt" });
+
+    const backButton = await screen.findByLabelText(
+      "Retour à la liste des ingrédients",
+    );
+
+    fireEvent.press(backButton);
+
+    expect(mockBack).toHaveBeenCalledTimes(1);
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
   it("navigates to ingredient details from list item", async () => {
     renderIngredientCategoryScreen({ categoryParam: "malt" });
 
@@ -140,9 +175,6 @@ describe("IngredientCategoryScreen", () => {
         id: "malt-1",
         returnTo: "/(app)/ingredients/[category]",
         returnCategory: "malt",
-        returnSearch: undefined,
-        returnEbcMin: undefined,
-        returnEbcMax: undefined,
       },
     });
   });
@@ -176,8 +208,6 @@ describe("IngredientCategoryScreen", () => {
         id: "hop-1",
         returnTo: "/(app)/ingredients/[category]",
         returnCategory: "hop",
-        returnSearch: undefined,
-        returnAlphaMin: undefined,
       },
     });
     expect(mockedListIngredientsByCategory).toHaveBeenCalledWith("hop", {

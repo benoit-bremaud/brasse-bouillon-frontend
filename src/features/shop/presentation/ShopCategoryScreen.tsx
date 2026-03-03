@@ -5,12 +5,14 @@ import {
   shopCategoryDescriptions,
   shopCategoryLabels,
 } from "@/features/shop/presentation/shop.constants";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, StyleSheet, Text, View } from "react-native";
 
+import { navigateBackWithFallback } from "@/core/navigation/back-navigation";
 import { normalizeRouteParam } from "@/core/navigation/route-params";
 import { Badge } from "@/core/ui/Badge";
 import { Card } from "@/core/ui/Card";
 import { EmptyStateCard } from "@/core/ui/EmptyStateCard";
+import { HeaderBackButton } from "@/core/ui/HeaderBackButton";
 import { ListHeader } from "@/core/ui/ListHeader";
 import { PrimaryButton } from "@/core/ui/PrimaryButton";
 import { Screen } from "@/core/ui/Screen";
@@ -27,6 +29,10 @@ export function ShopCategoryScreen({ categoryParam }: Props) {
   const category = normalizeRouteParam(categoryParam) ?? "";
   const isValid = isShopCategory(category);
 
+  const handleGoBack = () => {
+    navigateBackWithFallback(router, "/(app)/shop");
+  };
+
   if (!isValid) {
     return (
       <Screen>
@@ -34,19 +40,11 @@ export function ShopCategoryScreen({ categoryParam }: Props) {
           title="Catégorie inconnue"
           subtitle="Cette catégorie n'existe pas"
           action={
-            <Pressable
-              onPress={() => router.back()}
-              style={styles.backButton}
-              accessibilityRole="button"
-              accessibilityLabel="Retour"
-            >
-              <Ionicons
-                name="chevron-back"
-                size={18}
-                color={colors.brand.secondary}
-              />
-              <Text style={styles.backText}>Retour</Text>
-            </Pressable>
+            <HeaderBackButton
+              onPress={handleGoBack}
+              label="Boutique"
+              accessibilityLabel="Retour à la boutique"
+            />
           }
         />
         <EmptyStateCard
@@ -55,7 +53,7 @@ export function ShopCategoryScreen({ categoryParam }: Props) {
           action={
             <PrimaryButton
               label="Retour à la boutique"
-              onPress={() => router.back()}
+              onPress={handleGoBack}
             />
           }
         />
@@ -73,19 +71,11 @@ export function ShopCategoryScreen({ categoryParam }: Props) {
         title={label}
         subtitle={description}
         action={
-          <Pressable
-            onPress={() => router.back()}
-            style={styles.backButton}
-            accessibilityRole="button"
+          <HeaderBackButton
+            onPress={handleGoBack}
+            label="Boutique"
             accessibilityLabel="Retour à la boutique"
-          >
-            <Ionicons
-              name="chevron-back"
-              size={18}
-              color={colors.brand.secondary}
-            />
-            <Text style={styles.backText}>Boutique</Text>
-          </Pressable>
+          />
         }
       />
 
@@ -143,23 +133,6 @@ const styles = StyleSheet.create({
   },
   listHeader: {
     marginBottom: spacing.sm,
-  },
-  backButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xxs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.lg,
-    backgroundColor: colors.brand.background,
-    borderWidth: 1,
-    borderColor: colors.brand.secondary,
-  },
-  backText: {
-    color: colors.brand.secondary,
-    fontSize: typography.size.caption,
-    lineHeight: typography.lineHeight.caption,
-    fontWeight: typography.weight.medium,
   },
   infoCard: {
     backgroundColor: colors.brand.background,

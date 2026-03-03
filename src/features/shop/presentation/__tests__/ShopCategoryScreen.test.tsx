@@ -1,10 +1,12 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
-import React from "react";
 import { ShopCategoryScreen } from "@/features/shop/presentation/ShopCategoryScreen";
+import React from "react";
 
 const mockPush = jest.fn();
 const mockBack = jest.fn();
+const mockReplace = jest.fn();
+const mockCanGoBack = jest.fn();
 
 jest.mock("@expo/vector-icons", () => {
   return {
@@ -18,8 +20,9 @@ jest.mock("expo-router", () => {
     ...actual,
     useRouter: () => ({
       push: mockPush,
-      replace: jest.fn(),
+      replace: mockReplace,
       back: mockBack,
+      canGoBack: mockCanGoBack,
     }),
   };
 });
@@ -28,6 +31,9 @@ describe("ShopCategoryScreen", () => {
   beforeEach(() => {
     mockPush.mockClear();
     mockBack.mockClear();
+    mockReplace.mockClear();
+    mockCanGoBack.mockReset();
+    mockCanGoBack.mockReturnValue(false);
   });
 
   it("renders empty state for invalid category", () => {
@@ -69,9 +75,21 @@ describe("ShopCategoryScreen", () => {
   it("has back button to shop", () => {
     render(<ShopCategoryScreen categoryParam="levures" />);
 
-    const backButton = screen.getByText("Boutique");
+    const backButton = screen.getByLabelText("Retour à la boutique");
+    fireEvent.press(backButton);
+
+    expect(mockReplace).toHaveBeenCalledWith("/(app)/shop");
+  });
+
+  it("uses history back when available from shop category back button", () => {
+    mockCanGoBack.mockReturnValueOnce(true);
+
+    render(<ShopCategoryScreen categoryParam="levures" />);
+
+    const backButton = screen.getByLabelText("Retour à la boutique");
     fireEvent.press(backButton);
 
     expect(mockBack).toHaveBeenCalledTimes(1);
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 });

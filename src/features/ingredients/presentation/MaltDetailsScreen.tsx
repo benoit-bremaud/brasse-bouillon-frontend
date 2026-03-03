@@ -12,11 +12,12 @@ import {
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { getErrorMessage } from "@/core/http/http-error";
+import { navigateBackWithFallback } from "@/core/navigation/back-navigation";
 import { normalizeRouteParam } from "@/core/navigation/route-params";
 import { Card } from "@/core/ui/Card";
 import { EmptyStateCard } from "@/core/ui/EmptyStateCard";
+import { HeaderBackButton } from "@/core/ui/HeaderBackButton";
 import { ListHeader } from "@/core/ui/ListHeader";
-import { PrimaryButton } from "@/core/ui/PrimaryButton";
 import { Screen } from "@/core/ui/Screen";
 import { MaltProduct } from "@/features/ingredients/domain/malt.types";
 import { useQuery } from "@tanstack/react-query";
@@ -119,7 +120,7 @@ export function MaltDetailsScreen({
       return;
     }
 
-    router.push("/(app)/ingredients");
+    navigateBackWithFallback(router, "/(app)/ingredients");
   };
 
   const {
@@ -206,74 +207,81 @@ export function MaltDetailsScreen({
       }}
     >
       {malt ? (
-        <ScrollView
-          testID="malt-details-scroll"
-          style={styles.scroll}
-          contentContainerStyle={styles.content}
-        >
+        <>
           <ListHeader
             title={malt.name}
             subtitle={malt.brand ?? "Malt product sheet"}
+            action={
+              <HeaderBackButton
+                onPress={handleGoBack}
+                label="Retour"
+                accessibilityLabel="Retour"
+              />
+            }
           />
 
-          <Card style={styles.identityCard}>
-            {malt.maltType ? (
-              <Text style={styles.identityText}>Type: {malt.maltType}</Text>
-            ) : null}
-            {malt.originCountry ? (
-              <Text style={styles.identityText}>
-                Origin: {malt.originCountry}
-              </Text>
-            ) : null}
-            {malt.description ? (
-              <Text style={styles.description}>{malt.description}</Text>
-            ) : null}
-          </Card>
-
-          {malt.specGroups.map((group) => (
-            <Card key={group.id} style={styles.groupCard}>
-              <Text style={styles.groupTitle}>{group.title}</Text>
-
-              {group.rows.map((row) => (
-                <View key={row.id} style={styles.row}>
-                  <Text style={styles.rowLabel}>{row.label}</Text>
-                  <Text style={styles.rowValue}>
-                    {formatSpecValue(row.value, row.unit)}
-                  </Text>
-                </View>
-              ))}
+          <ScrollView
+            testID="malt-details-scroll"
+            style={styles.scroll}
+            contentContainerStyle={styles.content}
+          >
+            <Card style={styles.identityCard}>
+              {malt.maltType ? (
+                <Text style={styles.identityText}>Type: {malt.maltType}</Text>
+              ) : null}
+              {malt.originCountry ? (
+                <Text style={styles.identityText}>
+                  Origin: {malt.originCountry}
+                </Text>
+              ) : null}
+              {malt.description ? (
+                <Text style={styles.description}>{malt.description}</Text>
+              ) : null}
             </Card>
-          ))}
 
-          {alternativeMalts.length > 0 ? (
-            <Card style={styles.groupCard}>
-              <Text style={styles.groupTitle}>Alternative malts</Text>
+            {malt.specGroups.map((group) => (
+              <Card key={group.id} style={styles.groupCard}>
+                <Text style={styles.groupTitle}>{group.title}</Text>
 
-              {alternativeMalts.map((alternative) => (
-                <Pressable
-                  key={alternative.id}
-                  style={styles.alternativeRow}
-                  accessibilityRole="button"
-                  accessibilityLabel={`View alternative malt ${alternative.name}`}
-                  onPress={() => {
-                    openAlternativeMalt(alternative.id);
-                  }}
-                >
-                  <View style={styles.alternativeContent}>
-                    <Text style={styles.alternativeName}>
-                      {alternative.name}
-                    </Text>
-                    <Text style={styles.alternativeMeta}>
-                      {getAlternativeMaltMeta(alternative)}
+                {group.rows.map((row) => (
+                  <View key={row.id} style={styles.row}>
+                    <Text style={styles.rowLabel}>{row.label}</Text>
+                    <Text style={styles.rowValue}>
+                      {formatSpecValue(row.value, row.unit)}
                     </Text>
                   </View>
-                </Pressable>
-              ))}
-            </Card>
-          ) : null}
+                ))}
+              </Card>
+            ))}
 
-          <PrimaryButton label="Go back" onPress={handleGoBack} />
-        </ScrollView>
+            {alternativeMalts.length > 0 ? (
+              <Card style={styles.groupCard}>
+                <Text style={styles.groupTitle}>Alternative malts</Text>
+
+                {alternativeMalts.map((alternative) => (
+                  <Pressable
+                    key={alternative.id}
+                    style={styles.alternativeRow}
+                    accessibilityRole="button"
+                    accessibilityLabel={`View alternative malt ${alternative.name}`}
+                    onPress={() => {
+                      openAlternativeMalt(alternative.id);
+                    }}
+                  >
+                    <View style={styles.alternativeContent}>
+                      <Text style={styles.alternativeName}>
+                        {alternative.name}
+                      </Text>
+                      <Text style={styles.alternativeMeta}>
+                        {getAlternativeMaltMeta(alternative)}
+                      </Text>
+                    </View>
+                  </Pressable>
+                ))}
+              </Card>
+            ) : null}
+          </ScrollView>
+        </>
       ) : null}
     </Screen>
   );

@@ -9,6 +9,9 @@ import { MaltDetailsScreen } from "@/features/ingredients/presentation/MaltDetai
 import React from "react";
 
 const mockPush = jest.fn();
+const mockReplace = jest.fn();
+const mockBack = jest.fn();
+const mockCanGoBack = jest.fn();
 
 jest.mock("expo-router", () => {
   const actual = jest.requireActual("expo-router");
@@ -16,8 +19,9 @@ jest.mock("expo-router", () => {
     ...actual,
     useRouter: () => ({
       push: mockPush,
-      replace: jest.fn(),
-      back: jest.fn(),
+      replace: mockReplace,
+      back: mockBack,
+      canGoBack: mockCanGoBack,
     }),
   };
 });
@@ -89,6 +93,10 @@ function renderMaltDetailsScreen({
 describe("MaltDetailsScreen", () => {
   beforeEach(() => {
     mockPush.mockReset();
+    mockReplace.mockReset();
+    mockBack.mockReset();
+    mockCanGoBack.mockReset();
+    mockCanGoBack.mockReturnValue(false);
     mockedGetMaltDetails.mockReset();
     mockedListAlternativeMalts.mockReset();
     mockedGetMaltDetails.mockResolvedValue({
@@ -139,7 +147,7 @@ describe("MaltDetailsScreen", () => {
 
     expect(await screen.findByText("Pale Ale Malt")).toBeTruthy();
 
-    fireEvent.press(screen.getByText("Go back"));
+    fireEvent.press(screen.getByLabelText("Retour"));
 
     expect(mockPush).toHaveBeenCalledWith({
       pathname: "/(app)/recipes/[id]",
@@ -152,9 +160,22 @@ describe("MaltDetailsScreen", () => {
 
     expect(await screen.findByText("Pale Ale Malt")).toBeTruthy();
 
-    fireEvent.press(screen.getByText("Go back"));
+    fireEvent.press(screen.getByLabelText("Retour"));
 
-    expect(mockPush).toHaveBeenCalledWith("/(app)/ingredients");
+    expect(mockReplace).toHaveBeenCalledWith("/(app)/ingredients");
+  });
+
+  it("uses history back when available and no return context is provided", async () => {
+    mockCanGoBack.mockReturnValueOnce(true);
+
+    renderMaltDetailsScreen({ maltIdParam: "malt-1" });
+
+    expect(await screen.findByText("Pale Ale Malt")).toBeTruthy();
+
+    fireEvent.press(screen.getByLabelText("Retour"));
+
+    expect(mockBack).toHaveBeenCalledTimes(1);
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 
   it("navigates back to malt category with preserved filters", async () => {
@@ -169,7 +190,7 @@ describe("MaltDetailsScreen", () => {
 
     expect(await screen.findByText("Pale Ale Malt")).toBeTruthy();
 
-    fireEvent.press(screen.getByText("Go back"));
+    fireEvent.press(screen.getByLabelText("Retour"));
 
     expect(mockPush).toHaveBeenCalledWith({
       pathname: "/(app)/ingredients/[category]",
@@ -240,7 +261,7 @@ describe("MaltDetailsScreen", () => {
 
     expect(await screen.findByText("Pale Ale Malt")).toBeTruthy();
 
-    fireEvent.press(screen.getByText("Go back"));
+    fireEvent.press(screen.getByLabelText("Retour"));
 
     expect(mockPush).toHaveBeenCalledWith({
       pathname: "/(app)/ingredients/[category]",
@@ -263,7 +284,7 @@ describe("MaltDetailsScreen", () => {
 
     expect(await screen.findByText("Pale Ale Malt")).toBeTruthy();
 
-    fireEvent.press(screen.getByText("Go back"));
+    fireEvent.press(screen.getByLabelText("Retour"));
 
     expect(mockPush).toHaveBeenCalledWith({
       pathname: "/(app)/ingredients/[category]",

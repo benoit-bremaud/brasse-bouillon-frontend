@@ -4,6 +4,9 @@ import React from "react";
 import { ToolsHubScreen } from "../ToolsHubScreen";
 
 const mockPush = jest.fn();
+const mockReplace = jest.fn();
+const mockBack = jest.fn();
+const mockCanGoBack = jest.fn();
 
 jest.mock("@expo/vector-icons", () => {
   return {
@@ -17,8 +20,9 @@ jest.mock("expo-router", () => {
     ...actual,
     useRouter: () => ({
       push: mockPush,
-      replace: jest.fn(),
-      back: jest.fn(),
+      replace: mockReplace,
+      back: mockBack,
+      canGoBack: mockCanGoBack,
     }),
   };
 });
@@ -26,6 +30,10 @@ jest.mock("expo-router", () => {
 describe("ToolsHubScreen", () => {
   beforeEach(() => {
     mockPush.mockClear();
+    mockReplace.mockClear();
+    mockBack.mockClear();
+    mockCanGoBack.mockReset();
+    mockCanGoBack.mockReturnValue(false);
   });
 
   it("renders calculator hub title and known calculator topics", () => {
@@ -50,5 +58,24 @@ describe("ToolsHubScreen", () => {
       pathname: "/(app)/tools/[slug]/calculator",
       params: { slug: "fermentescibles" },
     });
+  });
+
+  it("uses dashboard fallback when pressing header back without history", () => {
+    render(<ToolsHubScreen />);
+
+    fireEvent.press(screen.getByLabelText("Retour à l'accueil"));
+
+    expect(mockReplace).toHaveBeenCalledWith("/(app)/dashboard");
+  });
+
+  it("uses history back when available from header back", () => {
+    mockCanGoBack.mockReturnValueOnce(true);
+
+    render(<ToolsHubScreen />);
+
+    fireEvent.press(screen.getByLabelText("Retour à l'accueil"));
+
+    expect(mockBack).toHaveBeenCalledTimes(1);
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 });
