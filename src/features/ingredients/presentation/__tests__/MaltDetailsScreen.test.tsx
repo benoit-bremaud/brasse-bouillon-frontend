@@ -165,7 +165,7 @@ describe("MaltDetailsScreen", () => {
     expect(mockReplace).toHaveBeenCalledWith("/(app)/ingredients");
   });
 
-  it("uses history back when available and no return context is provided", async () => {
+  it("always navigates to ingredients root when no return context is provided", async () => {
     mockCanGoBack.mockReturnValueOnce(true);
 
     renderMaltDetailsScreen({ maltIdParam: "malt-1" });
@@ -174,8 +174,8 @@ describe("MaltDetailsScreen", () => {
 
     fireEvent.press(screen.getByLabelText("Retour"));
 
-    expect(mockBack).toHaveBeenCalledTimes(1);
-    expect(mockReplace).not.toHaveBeenCalled();
+    expect(mockReplace).toHaveBeenCalledWith("/(app)/ingredients");
+    expect(mockBack).not.toHaveBeenCalled();
   });
 
   it("navigates back to malt category with preserved filters", async () => {

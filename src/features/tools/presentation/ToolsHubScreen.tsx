@@ -26,7 +26,9 @@ export function ToolsHubScreen() {
   const router = useRouter();
 
   const handleGoBack = () => {
-    navigateBackWithFallback(router, "/(app)/dashboard");
+    navigateBackWithFallback(router, "/(app)/dashboard", {
+      strategy: "fallback-first",
+    });
   };
 
   const calculatorTopics = academyTopics

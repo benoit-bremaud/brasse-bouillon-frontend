@@ -68,14 +68,14 @@ describe("ToolsHubScreen", () => {
     expect(mockReplace).toHaveBeenCalledWith("/(app)/dashboard");
   });
 
-  it("uses history back when available from header back", () => {
+  it("always navigates to dashboard from header back", () => {
     mockCanGoBack.mockReturnValueOnce(true);
 
     render(<ToolsHubScreen />);
 
     fireEvent.press(screen.getByLabelText("Retour à l'accueil"));
 
-    expect(mockBack).toHaveBeenCalledTimes(1);
-    expect(mockReplace).not.toHaveBeenCalled();
+    expect(mockReplace).toHaveBeenCalledWith("/(app)/dashboard");
+    expect(mockBack).not.toHaveBeenCalled();
   });
 });

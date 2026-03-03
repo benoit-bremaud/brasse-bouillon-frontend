@@ -147,7 +147,7 @@ describe("IngredientCategoryScreen", () => {
     expect(mockReplace).toHaveBeenCalledWith("/(app)/ingredients");
   });
 
-  it("uses history back when available from header back action", async () => {
+  it("always navigates to ingredients root when pressing category header back", async () => {
     mockCanGoBack.mockReturnValueOnce(true);
 
     renderIngredientCategoryScreen({ categoryParam: "malt" });
@@ -158,8 +158,8 @@ describe("IngredientCategoryScreen", () => {
 
     fireEvent.press(backButton);
 
-    expect(mockBack).toHaveBeenCalledTimes(1);
-    expect(mockReplace).not.toHaveBeenCalled();
+    expect(mockReplace).toHaveBeenCalledWith("/(app)/ingredients");
+    expect(mockBack).not.toHaveBeenCalled();
   });
 
   it("navigates to ingredient details from list item", async () => {

@@ -40,4 +40,15 @@ describe("navigateBackWithFallback", () => {
     expect(replace).toHaveBeenCalledWith("/(app)/dashboard");
     expect(back).not.toHaveBeenCalled();
   });
+
+  it("uses router.replace when fallback-first strategy is requested", () => {
+    const { router, back, replace } = createRouter(true);
+
+    navigateBackWithFallback(router, "/(app)/dashboard", {
+      strategy: "fallback-first",
+    });
+
+    expect(replace).toHaveBeenCalledWith("/(app)/dashboard");
+    expect(back).not.toHaveBeenCalled();
+  });
 });

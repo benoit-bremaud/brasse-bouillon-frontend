@@ -81,7 +81,7 @@ describe("ShopCategoryScreen", () => {
     expect(mockReplace).toHaveBeenCalledWith("/(app)/shop");
   });
 
-  it("uses history back when available from shop category back button", () => {
+  it("always navigates to shop root from category back button", () => {
     mockCanGoBack.mockReturnValueOnce(true);
 
     render(<ShopCategoryScreen categoryParam="levures" />);
@@ -89,7 +89,7 @@ describe("ShopCategoryScreen", () => {
     const backButton = screen.getByLabelText("Retour à la boutique");
     fireEvent.press(backButton);
 
-    expect(mockBack).toHaveBeenCalledTimes(1);
-    expect(mockReplace).not.toHaveBeenCalled();
+    expect(mockReplace).toHaveBeenCalledWith("/(app)/shop");
+    expect(mockBack).not.toHaveBeenCalled();
   });
 });

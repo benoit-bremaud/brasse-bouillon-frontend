@@ -220,7 +220,9 @@ export function IngredientCategoryScreen({
   const categoryPageTitle = getIngredientCategoryPageTitle(category);
 
   const handleGoBack = () => {
-    navigateBackWithFallback(router, "/(app)/ingredients");
+    navigateBackWithFallback(router, "/(app)/ingredients", {
+      strategy: "fallback-first",
+    });
   };
 
   const navigateToIngredientDetails = (ingredient: IngredientListItem) => {

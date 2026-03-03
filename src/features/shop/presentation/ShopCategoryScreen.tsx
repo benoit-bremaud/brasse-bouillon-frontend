@@ -30,7 +30,9 @@ export function ShopCategoryScreen({ categoryParam }: Props) {
   const isValid = isShopCategory(category);
 
   const handleGoBack = () => {
-    navigateBackWithFallback(router, "/(app)/shop");
+    navigateBackWithFallback(router, "/(app)/shop", {
+      strategy: "fallback-first",
+    });
   };
 
   if (!isValid) {

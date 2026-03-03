@@ -120,7 +120,9 @@ export function MaltDetailsScreen({
       return;
     }
 
-    navigateBackWithFallback(router, "/(app)/ingredients");
+    navigateBackWithFallback(router, "/(app)/ingredients", {
+      strategy: "fallback-first",
+    });
   };
 
   const {
