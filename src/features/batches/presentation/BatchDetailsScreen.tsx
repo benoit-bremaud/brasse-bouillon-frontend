@@ -1,4 +1,5 @@
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { useNavigationFooterOffset } from "@/core/ui/NavigationFooter";
 import { colors, radius, spacing, typography } from "@/core/theme";
 import {
   completeCurrentBatchStep,
@@ -215,8 +216,7 @@ const styles = StyleSheet.create({
     lineHeight: typography.lineHeight.body,
   },
   list: {
-    paddingBottom: spacing.lg,
-  },
+      },
   stepCard: {
     marginBottom: spacing.xs,
   },

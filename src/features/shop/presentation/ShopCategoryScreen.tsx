@@ -1,4 +1,5 @@
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { useNavigationFooterOffset } from "@/core/ui/NavigationFooter";
 import { colors, radius, spacing, typography } from "@/core/theme";
 import {
   isShopCategory,
@@ -143,8 +144,7 @@ export function ShopCategoryScreen({ categoryParam }: Props) {
 
 const styles = StyleSheet.create({
   list: {
-    paddingBottom: spacing.md,
-  },
+      },
   listHeader: {
     marginBottom: spacing.sm,
   },

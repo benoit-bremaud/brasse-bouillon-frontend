@@ -1,3 +1,4 @@
+import { useNavigationFooterOffset } from "@/core/ui/NavigationFooter";
 import { Href, useRouter } from "expo-router";
 import {
   Modal,
@@ -322,6 +323,7 @@ function getStatusColors(status: string): {
 }
 
 export function DashboardScreen() {
+  const bottomPadding = useNavigationFooterOffset();
   const router = useRouter();
   const { session, logout } = useAuth();
   const isUsingDemoData = dataSource.useDemoData;
@@ -642,7 +644,7 @@ export function DashboardScreen() {
   return (
     <Screen isLoading={isLoading} error={error} onRetry={handleRetry}>
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: bottomPadding }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.headerCard}>
@@ -1136,8 +1138,7 @@ export function DashboardScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingBottom: spacing.xl,
-    gap: spacing.sm,
+        gap: spacing.sm,
   },
   headerCard: {
     backgroundColor: colors.neutral.white,
@@ -1434,8 +1435,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.neutral.white,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
-    paddingBottom: spacing.lg,
-    gap: spacing.xs,
+        gap: spacing.xs,
   },
   sheetHandle: {
     width: 44,
@@ -1477,8 +1477,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.neutral.white,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
-    gap: spacing.sm,
+        gap: spacing.sm,
   },
   profileName: {
     fontSize: typography.size.body,
