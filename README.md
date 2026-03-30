@@ -1,3 +1,12 @@
+> **⚠️ DEPRECATED — This repository has been archived.**
+>
+> All development has moved to the unified monorepo:
+> **[benoit-bremaud/brasse-bouillon](https://github.com/benoit-bremaud/brasse-bouillon)**
+>
+> This repository is kept for historical reference only. No new commits will be accepted.
+
+---
+
 # Brasse Bouillon — Frontend (Expo / React Native)
 
 Frontend mobile de Brasse Bouillon, construit avec React Native + Expo Router.
